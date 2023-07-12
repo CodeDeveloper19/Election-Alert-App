@@ -9,12 +9,8 @@ class OnBoarding extends StatelessWidget {
   const OnBoarding({super.key});
   @override
   Widget build(BuildContext context) {
-    return MaterialApp(
-      debugShowCheckedModeBanner: false,
-      theme: ThemeData(
-        fontFamily: 'Montserrat',
-      ),
-      home: OnBoardingSlider(
+    return Scaffold(
+      body: OnBoardingSlider(
         totalPage: 3,
         controllerColor: kDefaultIconDarkColor,
         skipTextButton: Text(
@@ -35,8 +31,20 @@ class OnBoarding extends StatelessWidget {
             fontWeight: FontWeight.w500,
           ),
         ),
+        trailingFunction: () {
+          Navigator.pushNamed(
+            context,
+              '/login'
+            );
+        },
         headerBackgroundColor: Colors.white,
         finishButtonText: 'Register',
+        onFinish: () {
+          Navigator.pushNamed(
+            context,
+            '/signup'
+          );
+        },
         centerBackground: true,
         finishButtonStyle: FinishButtonStyle(
           backgroundColor: Colors.green[600],
@@ -44,15 +52,15 @@ class OnBoarding extends StatelessWidget {
         background: [
           Container(
               padding: const EdgeInsets.fromLTRB(40, 40, 40, 0),
-              child: Image.asset('assets/1.png', width: 300, height: 300, fit: BoxFit.contain)
+              child: Image.asset('assets/onboarding/1.png', width: 300, height: 300, fit: BoxFit.contain)
           ),
           Container(
               padding: const EdgeInsets.fromLTRB(40, 40, 40, 0),
-              child: Image.asset('assets/2.png', width: 300, height: 300, fit: BoxFit.contain)
+              child: Image.asset('assets/onboarding/2.png', width: 300, height: 300, fit: BoxFit.contain)
           ),
           Container(
               padding: const EdgeInsets.fromLTRB(40, 40, 40, 0),
-              child: Image.asset('assets/3.png', width: 300, height: 300, fit: BoxFit.contain)
+              child: Image.asset('assets/onboarding/3.png', width: 300, height: 300, fit: BoxFit.contain)
           ),
         ],
         speed: 1.3,

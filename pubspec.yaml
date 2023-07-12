@@ -62,7 +62,8 @@ flutter:
   # the material Icons class.
   uses-material-design: true
   assets:
-    - assets/
+    - assets/onboarding/
+    - assets/login/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware
@@ -80,6 +81,7 @@ flutter:
      fonts:
        - asset: fonts/Montserrat/Montserrat-Regular.ttf
        - asset: fonts/Montserrat/Montserrat-Bold.ttf
+       - asset: fonts/Montserrat/Montserrat-LightItalic.ttf
    - family: OpenSans
      fonts:
        - asset: fonts/OpenSans/OpenSans-VariableFont.ttf
