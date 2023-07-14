@@ -34,7 +34,7 @@ class MyTextField extends StatelessWidget {
                 color: Colors.red
             )
         ),
-        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 15),
+        contentPadding: const EdgeInsets.symmetric(horizontal: 20, vertical: 0),
       ),
     );
   }

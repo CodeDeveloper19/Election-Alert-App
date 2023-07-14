@@ -43,11 +43,15 @@ class LoginForm extends StatefulWidget {
 class _LoginFormState extends State<LoginForm> {
   final _loginFormKey = GlobalKey<FormState>();
 
-  final usernameController = TextEditingController();
+  final emailAddressController = TextEditingController();
 
   final passwordController = TextEditingController();
 
   bool _isChecked = false;
+
+  bool _isCheckedAutomatic = false;
+
+  bool _isRevealed = true;
 
   @override
   Widget build(BuildContext context) {
@@ -60,11 +64,11 @@ class _LoginFormState extends State<LoginForm> {
           children: <Widget>[
             Container(
               margin: const EdgeInsets.fromLTRB(5, 0, 5, 0),
-              child:  MyTextField(hintText: 'Username', controller: usernameController, obscureText: false, iconName: const Icon(Icons.person)),
+              child:  MyTextField(hintText: 'Email Address', controller: emailAddressController, obscureText: false, iconName: const Icon(Icons.email)),
             ),
             Container(
               margin: const EdgeInsets.fromLTRB(5, 20, 5, 0),
-              child:  MyTextField(hintText: 'Password', controller: passwordController, obscureText: true, iconName: const Icon(Icons.lock)),
+              child:  MyTextField(hintText: 'Password', controller: passwordController, obscureText: _isRevealed, iconName: togglePassword()),
             ),
             Row(
               mainAxisAlignment: MainAxisAlignment.spaceBetween,
@@ -106,33 +110,60 @@ class _LoginFormState extends State<LoginForm> {
                 ),
                 Container(
                   margin: const EdgeInsets.only(right: 10),
-                  child:  const Text(
-                    'Forgot Password?',
-                    style: TextStyle(
-                        color: Colors.blue,
-                        fontStyle: FontStyle.italic,
-                        fontFamily: 'Montserrat',
-                        fontWeight: FontWeight.w500,
-                        fontSize: 10
+                  child: TextButton(
+                    onPressed: () {
+                      Navigator.pushNamed(context, '/forgot');
+                    },
+                    child:  Text(
+                      'Forgot Password?',
+                      style: TextStyle(
+                          color: Colors.blue,
+                          fontStyle: FontStyle.italic,
+                          fontFamily: 'Montserrat',
+                          fontWeight: FontWeight.w500,
+                          fontSize: 10
+                      ),
                     ),
                   ),
                 ),
-                // Expanded(
-                //   flex: 1,
-                //   child: TextButton(
-                //     onPressed: () {},
-                //     child: const Text(
-                //       'Forgot Password?',
-                //       style: TextStyle(
-                //         color: Colors.black54,
-                //         fontSize: 12
-                //       ),
-                //     ),
-                //   ),
-                // ),
               ],
             ),
-            const FormButton(),
+            Container(
+              margin: const EdgeInsets.only(top: 0),
+              child: TextButton(
+                  // here toggle the bool value so that when you click
+                  // on the whole item, it will reflect changes in Checkbox
+                    onPressed: () => setState(() => _isCheckedAutomatic = !_isCheckedAutomatic),
+                    child: Row(
+                        mainAxisAlignment: MainAxisAlignment.start,
+                        children: [
+                          SizedBox(
+                              height: 24.0,
+                              width: 24.0,
+                              child: Checkbox(
+                                  value: _isCheckedAutomatic,
+                                  onChanged: (value){
+                                    setState(() => _isCheckedAutomatic = value!);
+                                  }
+                              )
+                          ),
+                          // You can play with the width to adjust your
+                          // desired spacing
+                          const SizedBox(width: 10.0),
+                          const Text("Log out automatically after five minutes?",
+                            style: TextStyle(
+                                color: Colors.black54,
+                                fontSize: 10,
+                                fontStyle: FontStyle.italic,
+                                fontFamily: 'Montserrat',
+                                fontWeight: FontWeight.w500
+                            ),
+                          ),
+                        ]
+                    )
+                )
+            ),
+            const FormButton(horizontalPadding: 10, buttonText: 'Sign In'),
             Row(
               mainAxisAlignment: MainAxisAlignment.center,
               children: <Widget> [
@@ -158,6 +189,17 @@ class _LoginFormState extends State<LoginForm> {
           ],
         ),
       ),
+    );
+  }
+
+  Widget togglePassword () {
+    return IconButton(
+      onPressed: () {
+        setState(() {
+          _isRevealed = !_isRevealed;
+        });
+      },
+      icon: _isRevealed ? Icon(Icons.visibility_off) : Icon(Icons.visibility)
     );
   }
 }

@@ -1,21 +1,25 @@
 import 'package:flutter/material.dart';
 
 class FormButton extends StatelessWidget {
-  const FormButton({super.key});
+  const FormButton({super.key, required this.horizontalPadding, required this.buttonText});
+
+  final String buttonText;
+
+  final double horizontalPadding;
 
   @override
   Widget build(BuildContext context) {
     return Container(
-      margin: const EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+      margin: EdgeInsets.symmetric(horizontal: horizontalPadding, vertical: 0),
       child: ElevatedButton(
         onPressed: () {},
         style: ButtonStyle(
           backgroundColor: MaterialStateProperty.all(Colors.green[600]),
         ),
-        child: const Center(
+        child: Center(
           child: Text(
-            'Sign In',
-            style: TextStyle(
+            buttonText,
+            style: const TextStyle(
               color: Colors.white,
             ),
           ),
