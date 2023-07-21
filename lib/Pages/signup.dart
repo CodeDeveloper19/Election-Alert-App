@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:election_alert_app/Components/textfield.dart';
-import 'package:election_alert_app/Components/formbutton.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:go_router/go_router.dart';
+import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 
 class SignUp extends StatelessWidget {
   const SignUp({super.key});
@@ -9,11 +11,10 @@ class SignUp extends StatelessWidget {
   Widget build(BuildContext context) {
     return Scaffold(
       backgroundColor: Colors.white,
-      body: Column(
-        children: <Widget>[
-          Expanded(
-            flex: 2,
-            child: Row(
+      body: SingleChildScrollView(
+        child: Column(
+          children: <Widget>[
+            Row(
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: <Widget> [
                 Container(
@@ -22,13 +23,10 @@ class SignUp extends StatelessWidget {
                 ),
               ],
             ),
-          ),
-          const Expanded(
-            flex: 3,
-            child: SignUpForm()
-          ),
-        ],
-      ),
+            SignUpForm()
+          ],
+        ),
+      )
     );
   }
 }
@@ -43,17 +41,81 @@ class SignUpForm extends StatefulWidget {
 class _SignUpFormState extends State<SignUpForm> {
   final _signupFormKey = GlobalKey<FormState>();
 
-  final firstnameController = TextEditingController();
-
-  final lastnameController = TextEditingController();
-
   final passwordController = TextEditingController();
-
-  final usernameController = TextEditingController();
 
   final emailController = TextEditingController();
 
   bool _isRevealed = true;
+
+  void _showSnackbarSuccess(message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        /// need to set following properties for best effect of awesome_snackbar_content
+        elevation: 0,
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.transparent,
+        margin: EdgeInsets.only(
+            bottom: MediaQuery.of(context).size.height - 100,
+            left: 10,
+            right: 10,
+            top: 55
+        ),
+        content: AwesomeSnackbarContent(
+          title: 'Account Creation Successful',
+          titleFontSize: 18,
+          message: message,
+          /// change contentType to ContentType.success, ContentType.warning or ContentType.help for variants
+          contentType: ContentType.success,
+        ),
+      ),
+    );
+  }
+
+  void _showSnackbarError(message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        /// need to set following properties for best effect of awesome_snackbar_content
+        elevation: 0,
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.transparent,
+        margin: EdgeInsets.only(
+            bottom: MediaQuery.of(context).size.height - 100,
+            left: 10,
+            right: 10,
+            top: 55
+        ),
+        content: AwesomeSnackbarContent(
+          title: 'Error!',
+          titleFontSize: 18,
+          message: message,
+          /// change contentType to ContentType.success, ContentType.warning or ContentType.help for variants
+          contentType: ContentType.failure,
+        ),
+      ),
+    );
+  }
+
+  Future<void> Signup () async {
+    try {
+      final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
+        email: emailController.text,
+        password: passwordController.text,
+      );
+      context.go('/auth');
+      // await user?.sendEmailVerification();
+      _showSnackbarSuccess('Please confirm your email address');
+    } on FirebaseAuthException catch (e) {
+      if (e.code == 'weak-password') {
+        _showSnackbarError('The password provided is too weak.');
+      } else if (e.code == 'email-already-in-use') {
+        _showSnackbarError('An account already exists for that email.');
+      } else if (e.code == 'invalid-email') {
+        _showSnackbarError('Email address provided is invalid');
+      }
+    } catch (e) {
+      print(e);
+    }
+  }
 
   @override
   Widget build(BuildContext context) {
@@ -62,36 +124,39 @@ class _SignUpFormState extends State<SignUpForm> {
       child: Container(
         padding: const EdgeInsets.fromLTRB(30, 20, 30, 0),
         child: Column(
-          // crossAxisAlignment: CrossAxisAlignment.end,
           children: <Widget>[
-            Row(
-              mainAxisAlignment: MainAxisAlignment.spaceBetween,
-              children: <Widget>[
-                Expanded(
-                  flex: 1,
-                  child: Container(
-                    margin: const EdgeInsets.only(right: 10),
-                    child:  MyTextField(hintText: 'Firstname', controller: firstnameController, obscureText: false, iconName: const Icon(Icons.account_circle)),
-                  ),
-                ),
-                Expanded(
-                  flex: 1,
-                  child: Container(
-                    margin: const EdgeInsets.only(left: 10),
-                    child:  MyTextField(hintText: 'Lastname', controller: lastnameController, obscureText: false, iconName: const Icon(Icons.account_circle)),
-                  ),
-                ),
-              ],
-            ),
             Container(
               margin: const EdgeInsets.only(top: 15),
-              child:  MyTextField(hintText: 'Email', controller: emailController, obscureText: false, iconName: const Icon(Icons.email)),
+              child:  MyTextField(hintText: 'Email Address', controller: emailController, obscureText: false, iconName: const Icon(Icons.email)),
             ),
             Container(
               margin: const EdgeInsets.only(top: 15, bottom: 15),
               child:  MyTextField(hintText: 'Password', controller: passwordController, obscureText: _isRevealed, iconName: togglePassword()),
             ),
-            const FormButton(horizontalPadding: 0, buttonText: 'Sign Up'),
+            Container(
+              margin: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
+              child: ElevatedButton(
+                onPressed: () {
+                  if (passwordController.text == "" || emailController.text == ""){
+                    print('Missing Texts');
+                  } else {
+                    Signup();
+                    FocusManager.instance.primaryFocus?.unfocus();
+                  }
+                },
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all(Colors.green[600]),
+                ),
+                child: Center(
+                  child: Text(
+                    'Sign Up',
+                    style: const TextStyle(
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
             Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget> [
@@ -100,7 +165,7 @@ class _SignUpFormState extends State<SignUpForm> {
                   ),
                   TextButton(
                     onPressed: () {
-                      Navigator.pushNamed(context, '/login');
+                      context.go('/auth/login');
                     },
                     child: const Text(
                         'Login Here',

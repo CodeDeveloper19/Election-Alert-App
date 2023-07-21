@@ -1,6 +1,8 @@
 import 'package:flutter/material.dart';
 import 'package:election_alert_app/Components/textfield.dart';
-import 'package:election_alert_app/Components/formbutton.dart';
+import 'package:go_router/go_router.dart';
+import 'package:firebase_auth/firebase_auth.dart';
+import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 
 class Forgot extends StatelessWidget {
   const Forgot({super.key});
@@ -48,6 +50,54 @@ class _ForgotFormState extends State<ForgotForm> {
 
   final emailController = TextEditingController();
 
+  void _showSnackbarSuccess(message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        /// need to set following properties for best effect of awesome_snackbar_content
+        elevation: 0,
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.transparent,
+        margin: EdgeInsets.only(
+            bottom: MediaQuery.of(context).size.height - 100,
+            left: 10,
+            right: 10,
+            top: 55
+        ),
+        content: AwesomeSnackbarContent(
+          title: 'Password Reset Sent',
+          titleFontSize: 18,
+          message: message,
+          /// change contentType to ContentType.success, ContentType.warning or ContentType.help for variants
+          contentType: ContentType.help,
+        ),
+      ),
+    );
+  }
+
+  void _showSnackbarError(message) {
+    ScaffoldMessenger.of(context).showSnackBar(
+      SnackBar(
+        /// need to set following properties for best effect of awesome_snackbar_content
+        elevation: 0,
+        behavior: SnackBarBehavior.floating,
+        backgroundColor: Colors.transparent,
+        margin: EdgeInsets.only(
+            bottom: MediaQuery.of(context).size.height - 100,
+            left: 10,
+            right: 10,
+            top: 55
+        ),
+        content: AwesomeSnackbarContent(
+          title: 'Error!',
+          titleFontSize: 18,
+          message: message,
+          /// change contentType to ContentType.success, ContentType.warning or ContentType.help for variants
+          contentType: ContentType.failure,
+        ),
+      ),
+    );
+  }
+
   @override
   Widget build(BuildContext context) {
     return Form(
@@ -60,7 +110,38 @@ class _ForgotFormState extends State<ForgotForm> {
               margin: EdgeInsets.only(bottom: 20, left: 5, right: 5),
               child: MyTextField(hintText: 'Email Address', controller: emailController, obscureText: false, iconName: Icon(Icons.email)),
             ),
-            FormButton(horizontalPadding: 10, buttonText: 'Reset Password'),
+              Container(
+              margin: EdgeInsets.symmetric(horizontal: 10, vertical: 0),
+              child: ElevatedButton(
+                onPressed: () async {
+                  FocusManager.instance.primaryFocus?.unfocus();
+                  try {
+                    await FirebaseAuth.instance.sendPasswordResetEmail(email: emailController.text);
+                    _showSnackbarSuccess('Check your email for the password reset link');
+                    context.go('/auth/login');
+                  } on FirebaseAuthException catch (e) {
+                    if (e.code == 'invalid-email'){
+                      _showSnackbarError('Email address provided is invalid');
+                    } else if (e.code == 'user-not-found') {
+                      _showSnackbarError('No user found for that email.');
+                    }
+                  } catch (e) {
+                    print(e);
+                  }
+                },
+                style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all(Colors.green[600]),
+                ),
+                child: Center(
+                  child: Text(
+                    'Reset Password',
+                    style: const TextStyle(
+                      color: Colors.white,
+                    ),
+                  ),
+                ),
+              ),
+            ),
             Container(
               padding: EdgeInsets.symmetric(horizontal: 10, vertical: 0),
               child: Row(
@@ -68,7 +149,7 @@ class _ForgotFormState extends State<ForgotForm> {
                 children: <Widget>[
                   TextButton(
                     onPressed: () {
-                      Navigator.pushNamed(context, '/signup');
+                      context.go('/auth/signup');
                     },
                     child:  Text(
                       'Create New Account',
@@ -83,7 +164,7 @@ class _ForgotFormState extends State<ForgotForm> {
                   ),
                   TextButton(
                     onPressed: () {
-                      Navigator.pushNamed(context, '/login');
+                      context.go('/auth/login');
                     },
                     child:  Text(
                       'Try to Sign-in Again',
