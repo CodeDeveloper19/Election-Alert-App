@@ -40,7 +40,10 @@ dependencies:
   firebase_core: ^2.15.0
   go_router: ^9.0.3
   awesome_snackbar_content: ^0.1.3
-#  shared_preferences: ^2.2.0
+  shared_preferences: ^2.2.0
+  google_maps_flutter: ^2.3.1
+  location: ^5.0.1
+  google_nav_bar: ^5.0.6
 flutter_icons:
   android: "launcher_icon"
   ios: true
@@ -76,6 +79,7 @@ flutter:
   assets:
     - assets/onboarding/
     - assets/login/
+    - assets/icons/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

@@ -3,7 +3,7 @@ import 'package:flutter/material.dart';
 import 'package:election_alert_app/Components/textfield.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
-// import 'package:shared_preferences/shared_preferences.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Login extends StatelessWidget {
   const Login({super.key});
@@ -40,7 +40,7 @@ class LoginForm extends StatefulWidget {
 }
 
 class _LoginFormState extends State<LoginForm> {
-  // final Future<SharedPreferences> _prefs = SharedPreferences.getInstance();
+  late SharedPreferences preferences;
 
   final _loginFormKey = GlobalKey<FormState>();
 
@@ -53,6 +53,37 @@ class _LoginFormState extends State<LoginForm> {
   bool _isCheckedAutomatic = false;
 
   bool _isRevealed = true;
+
+  late String? _emailAddress;
+  late String? _password;
+  late bool? _remember;
+  late bool? _autoSignOut;
+
+  void initState() {
+    super.initState();
+    init();
+  }
+
+  Future init() async {
+    preferences = await SharedPreferences.getInstance();
+
+    _remember = preferences.getBool('remember');
+    setState(() {
+      _isChecked = _remember!;
+    });
+
+    if (_isChecked){
+      _emailAddress = preferences.getString('email');
+      _password = preferences.getString('password');
+      _autoSignOut = preferences.getBool('autoSignOut');
+
+      setState(() {
+        emailAddressController.text = _emailAddress!;
+        passwordController.text = _password!;
+        _isCheckedAutomatic = _autoSignOut!;
+      });
+    }
+  }
 
   void _showSnackbar(message, contentType) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -78,18 +109,19 @@ class _LoginFormState extends State<LoginForm> {
     );
   }
 
-
-
-  // Future<void> SigningIn () async {
-  //   signIn();
-  //   if (_isChecked){
-  //   //   // final SharedPreferences prefs = await _prefs;
-  //   //   // final SharedPreferences prefs = await SharedPreferences.getInstance();
-  //   //   await prefs.setString('email', emailAddressController.text);
-  //   //   await prefs.setString('password', passwordController.text);
-  //     print("checked");
-  //   }
-  // }
+  Future<void> savingCredentials () async {
+    if (_isChecked){
+      await preferences.setString('email', emailAddressController.text);
+      await preferences.setString('password', passwordController.text);
+      await preferences.setBool('remember', _isChecked);
+      await preferences.setBool('autoSignOut', _isCheckedAutomatic);
+    } else {
+      await preferences.remove('email');
+      await preferences.remove('password');
+      await preferences.remove('remember');
+      await preferences.remove('autoSignOut');
+    }
+  }
 
   Future<void> signIn () async {
     try {
@@ -97,6 +129,7 @@ class _LoginFormState extends State<LoginForm> {
         email: emailAddressController.text,
         password: passwordController.text,
       );
+      savingCredentials();
       Navigator.pop(context);
     } on FirebaseAuthException catch (e) {
       if (e.code == 'user-not-found') {
@@ -110,6 +143,13 @@ class _LoginFormState extends State<LoginForm> {
       }
     } catch (e) {
       print(e);
+    }
+  }
+
+  Future<void> automaticSignOut() async {
+    if (_isCheckedAutomatic){
+      await Future.delayed(const Duration(minutes: 1));
+      await FirebaseAuth.instance.signOut();
     }
   }
 
@@ -227,11 +267,12 @@ class _LoginFormState extends State<LoginForm> {
               margin: EdgeInsets.symmetric(horizontal: 10, vertical: 0),
               child: ElevatedButton(
                 onPressed: () {
+                  FocusManager.instance.primaryFocus?.unfocus();
                   if (emailAddressController.text == "" || passwordController.text == ""){
-                    print("Missing Texts");
+                    _showSnackbar('One or more input fields are empty', ContentType.failure);
                   } else {
                     signIn();
-                    FocusManager.instance.primaryFocus?.unfocus();
+                    automaticSignOut();
                   }
                 },
                 style: ButtonStyle(

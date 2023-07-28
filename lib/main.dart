@@ -8,6 +8,7 @@ import 'package:firebase_core/firebase_core.dart';
 import 'firebase_options.dart';
 import 'package:election_alert_app/Pages/auth_page.dart';
 import 'package:go_router/go_router.dart';
+import 'package:election_alert_app/Pages/profile.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -67,6 +68,14 @@ class _MyAppState extends State<MyApp> {
         builder: (BuildContext context, GoRouterState state) {
           return const Homepage();
         },
+        routes: <RouteBase>[
+         GoRoute(
+           path: 'profile',
+           builder: (BuildContext context, GoRouterState state) {
+             return const ProfileSettings();
+           },
+         ),
+        ]
       ),
     ],
   );

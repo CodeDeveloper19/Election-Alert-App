@@ -3,6 +3,7 @@ import 'package:election_alert_app/Components/textfield.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class SignUp extends StatelessWidget {
   const SignUp({super.key});
@@ -39,6 +40,8 @@ class SignUpForm extends StatefulWidget {
 }
 
 class _SignUpFormState extends State<SignUpForm> {
+  late SharedPreferences preferences;
+
   final _signupFormKey = GlobalKey<FormState>();
 
   final passwordController = TextEditingController();
@@ -95,15 +98,31 @@ class _SignUpFormState extends State<SignUpForm> {
     );
   }
 
+  void initState() {
+    super.initState();
+    init();
+  }
+
+  Future init() async {
+    preferences = await SharedPreferences.getInstance();
+  }
+
+  Future<void> savingCredentials () async {
+    await preferences.setString('email', emailController.text);
+    await preferences.setString('password', passwordController.text);
+  }
+
   Future<void> Signup () async {
     try {
       final credential = await FirebaseAuth.instance.createUserWithEmailAndPassword(
         email: emailController.text,
         password: passwordController.text,
       );
-      context.go('/auth');
-      // await user?.sendEmailVerification();
+      User? user = FirebaseAuth.instance.currentUser;
+      await user?.sendEmailVerification();
+      savingCredentials();
       _showSnackbarSuccess('Please confirm your email address');
+      context.go('/auth');
     } on FirebaseAuthException catch (e) {
       if (e.code == 'weak-password') {
         _showSnackbarError('The password provided is too weak.');
@@ -137,11 +156,11 @@ class _SignUpFormState extends State<SignUpForm> {
               margin: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
               child: ElevatedButton(
                 onPressed: () {
+                  FocusManager.instance.primaryFocus?.unfocus();
                   if (passwordController.text == "" || emailController.text == ""){
-                    print('Missing Texts');
+                    _showSnackbarError('One or more input fields are empty');
                   } else {
                     Signup();
-                    FocusManager.instance.primaryFocus?.unfocus();
                   }
                 },
                 style: ButtonStyle(

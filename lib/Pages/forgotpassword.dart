@@ -115,18 +115,22 @@ class _ForgotFormState extends State<ForgotForm> {
               child: ElevatedButton(
                 onPressed: () async {
                   FocusManager.instance.primaryFocus?.unfocus();
-                  try {
-                    await FirebaseAuth.instance.sendPasswordResetEmail(email: emailController.text);
-                    _showSnackbarSuccess('Check your email for the password reset link');
-                    context.go('/auth/login');
-                  } on FirebaseAuthException catch (e) {
-                    if (e.code == 'invalid-email'){
-                      _showSnackbarError('Email address provided is invalid');
-                    } else if (e.code == 'user-not-found') {
-                      _showSnackbarError('No user found for that email.');
+                  if (emailController.text == ""){
+                    _showSnackbarError('Input field is empty');
+                  } else {
+                    try {
+                      await FirebaseAuth.instance.sendPasswordResetEmail(email: emailController.text);
+                      _showSnackbarSuccess('Check your email for the password reset link');
+                      context.go('/auth/login');
+                    } on FirebaseAuthException catch (e) {
+                      if (e.code == 'invalid-email'){
+                        _showSnackbarError('Email address provided is invalid');
+                      } else if (e.code == 'user-not-found') {
+                        _showSnackbarError('No user found for that email.');
+                      }
+                    } catch (e) {
+                      print(e);
                     }
-                  } catch (e) {
-                    print(e);
                   }
                 },
                 style: ButtonStyle(
