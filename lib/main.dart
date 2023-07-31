@@ -9,6 +9,8 @@ import 'firebase_options.dart';
 import 'package:election_alert_app/Pages/auth_page.dart';
 import 'package:go_router/go_router.dart';
 import 'package:election_alert_app/Pages/profile.dart';
+import 'package:election_alert_app/Pages/Notifications/notifications_onboarding.dart';
+import 'package:election_alert_app/Pages/Notifications/settings.dart';
 
 Future<void> main() async {
   WidgetsFlutterBinding.ensureInitialized();
@@ -69,12 +71,26 @@ class _MyAppState extends State<MyApp> {
           return const Homepage();
         },
         routes: <RouteBase>[
-         GoRoute(
+          GoRoute(
            path: 'profile',
            builder: (BuildContext context, GoRouterState state) {
              return const ProfileSettings();
            },
          ),
+         GoRoute(
+            path: 'notifications_onboarding',
+            builder: (BuildContext context, GoRouterState state) {
+              return const NotificationsOnboarding();
+            },
+             routes: <RouteBase>[
+               GoRoute(
+                 path: 'settings',
+                 builder: (BuildContext context, GoRouterState state) {
+                   return const NotificationSettings();
+                 },
+               ),
+             ]
+          ),
         ]
       ),
     ],

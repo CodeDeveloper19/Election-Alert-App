@@ -4,6 +4,7 @@ import 'package:go_router/go_router.dart';
 import 'package:google_maps_flutter/google_maps_flutter.dart';
 import 'package:location/location.dart';
 import 'package:google_nav_bar/google_nav_bar.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class Homepage extends StatefulWidget {
   const Homepage({super.key});
@@ -13,9 +14,12 @@ class Homepage extends StatefulWidget {
 }
 
 class _HomepageState extends State<Homepage> {
+  late SharedPreferences preferences;
+
   void initState() {
     super.initState();
     _determinePosition();
+    init();
   }
 
   LocationData? _locationData;
@@ -26,9 +30,27 @@ class _HomepageState extends State<Homepage> {
   late PermissionStatus _permissionGranted;
 
   int _selectedIndex = 1;
+  bool _mapSettings = false;
+  bool _traffic = false;
+  bool _buildings = false;
+  MapType _mapType = MapType.normal;
+
+  double _compassRotation = 0.0;
+  late LatLng _currentLatLng;
+
+  late bool? _isAlertSave;
+  late bool? _isTrendSave;
+
 
   void _onMapCreated(GoogleMapController controller) {
     mapController = controller;
+  }
+
+  Future init() async {
+    preferences = await SharedPreferences.getInstance();
+
+    _isAlertSave = preferences.getBool('alert_notifications');
+    _isTrendSave = preferences.getBool('trend_notifications');
   }
 
   Future<void> _determinePosition () async {
@@ -53,8 +75,8 @@ class _HomepageState extends State<Homepage> {
 
     try {
       _locationData = await location.getLocation();
-      if (_locationData != null && mapController != null) {
-        mapController!.animateCamera(
+      if (_locationData != null) {
+        mapController.animateCamera(
           CameraUpdate.newLatLngZoom(
             LatLng(_locationData!.latitude!, _locationData!.longitude!),
             17.0, // You can adjust the zoom level as needed.
@@ -66,27 +88,173 @@ class _HomepageState extends State<Homepage> {
     }
   }
 
-  // void _currentLocation() async {
-  //   // final GoogleMapController controller = await _controller.future;
-  //   LocationData? currentLocation;
-  //   var location = new Location();
-  //   try {
-  //     currentLocation = await location.getLocation();
-  //   } on Exception {
-  //     currentLocation = null;
-  //   }
-  //
-  //   mapController.animateCamera(CameraUpdate.newCameraPosition(
-  //     CameraPosition(
-  //       bearing: 0,
-  //       target: LatLng(currentLocation!.latitude!, currentLocation!.longitude!),
-  //       zoom: 17.0,
-  //     ),
-  //   ));
-  // }
+  void _rotateMap() {
+    mapController.animateCamera(
+      CameraUpdate.newCameraPosition(
+        CameraPosition(
+          bearing: 0.0,
+          zoom: 17.0,
+          target: _currentLatLng, // Update the rotation by 45 degrees
+        ),
+      ),
+    );
+  }
 
   @override
   Widget build(BuildContext context) {
+    List <Widget> mapTypeList = [
+      Container(
+        margin: EdgeInsets.only(right: 35),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _mapType = MapType.normal;
+                });
+              },
+              child: Image.asset('assets/icons/default_map.png', fit: BoxFit.cover,),
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all(Colors.white),
+                fixedSize: MaterialStateProperty.all(const Size(50, 50)),
+                padding: MaterialStateProperty.all(const EdgeInsets.all(0)),
+                overlayColor: MaterialStateProperty.all(Colors.grey[300]),
+                shape: MaterialStateProperty.all(
+                  RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                ),
+              ),
+            ),
+            Text('Default', style: TextStyle(color: _mapType == MapType.normal ? Colors.green : Colors.grey[600], fontFamily: 'OpenSans', fontSize: 10),),
+          ],
+        ),
+      ),
+      Container(
+        margin: EdgeInsets.only(right: 35),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _mapType = MapType.hybrid;
+                });
+              },
+              child: Image.asset('assets/icons/hybrid_map.png', fit: BoxFit.cover,),
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all(Colors.white),
+                fixedSize: MaterialStateProperty.all(const Size(50, 50)),
+                padding: MaterialStateProperty.all(const EdgeInsets.all(0)),
+                overlayColor: MaterialStateProperty.all(Colors.grey[300]),
+                shape: MaterialStateProperty.all(
+                  RoundedRectangleBorder(
+                    borderRadius: BorderRadius.circular(25),
+                  ),
+                ),
+              ),
+            ),
+            Text('Hybrid', style: TextStyle(color: _mapType == MapType.hybrid ? Colors.green : Colors.grey[600], fontFamily: 'OpenSans', fontSize: 10),),
+          ],
+        ),
+      ),
+      Container(
+        margin: EdgeInsets.only(right: 35),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _mapType = MapType.satellite;
+                });
+              },
+              child: Image.asset('assets/icons/satellite_map.png', fit: BoxFit.cover,),
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all(Colors.white),
+                fixedSize: MaterialStateProperty.all(const Size(40, 40)),
+                padding: MaterialStateProperty.all(const EdgeInsets.all(0)),
+                overlayColor: MaterialStateProperty.all(Colors.grey[300]),
+              ),
+            ),
+            Text('Satellite', style: TextStyle(color: _mapType == MapType.satellite ? Colors.green : Colors.grey[600], fontFamily: 'OpenSans', fontSize: 10),),
+          ],
+        ),
+      ),
+      Container(
+        margin: EdgeInsets.only(right: 20),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _mapType = MapType.terrain;
+                });
+              },
+              child: Image.asset('assets/icons/terrain_map.png', fit: BoxFit.cover,),
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all(Colors.white),
+                fixedSize: MaterialStateProperty.all(const Size(50, 50)),
+                padding: MaterialStateProperty.all(const EdgeInsets.all(0)),
+                overlayColor: MaterialStateProperty.all(Colors.grey[300]),
+              ),
+            ),
+            Text('Terrain', style: TextStyle(color: _mapType == MapType.terrain ? Colors.green : Colors.grey[600], fontFamily: 'OpenSans', fontSize: 10),),
+          ],
+        ),
+      ),
+    ];
+
+    List <Widget> mapDetailList = [
+      Container(
+        margin: EdgeInsets.only(right: 35),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _traffic = !_traffic;
+                });
+              },
+              child: Image.asset('assets/icons/traffic.png', fit: BoxFit.cover,),
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all(Colors.white),
+                fixedSize: MaterialStateProperty.all(const Size(40, 40)),
+                padding: MaterialStateProperty.all(const EdgeInsets.all(0)),
+                overlayColor: MaterialStateProperty.all(Colors.grey[300]),
+              ),
+            ),
+            Text('Traffic', style: TextStyle(color: _traffic ? Colors.green : Colors.grey[600], fontFamily: 'OpenSans', fontSize: 10),),
+          ],
+        ),
+      ),
+      Container(
+        margin: EdgeInsets.only(right: 35),
+        child: Column(
+          mainAxisAlignment: MainAxisAlignment.spaceBetween,
+          children: <Widget>[
+            TextButton(
+              onPressed: () {
+                setState(() {
+                  _buildings = !_buildings;
+                });
+              },
+              child: Image.asset('assets/icons/buildings.png', fit: BoxFit.cover,),
+              style: ButtonStyle(
+                backgroundColor: MaterialStateProperty.all(Colors.white),
+                fixedSize: MaterialStateProperty.all(const Size(40, 40)),
+                padding: MaterialStateProperty.all(const EdgeInsets.all(0)),
+                overlayColor: MaterialStateProperty.all(Colors.grey[300]),
+              ),
+            ),
+            Text('Buildings', style: TextStyle(color: _buildings ? Colors.green : Colors.grey[600], fontFamily: 'OpenSans', fontSize: 10),),
+          ],
+        ),
+      ),
+    ];
     return Scaffold(
       extendBody: true,
       // backgroundColor: Colors.blue,
@@ -98,11 +266,20 @@ class _HomepageState extends State<Homepage> {
               target: LatLng(0.0, 0.0),
               zoom: 6.0,
             ),
-            mapType: MapType.hybrid,
+            mapType: _mapType,
             onMapCreated: _onMapCreated,
             zoomControlsEnabled: false,
             myLocationEnabled: true,
             myLocationButtonEnabled: false,
+            trafficEnabled: _traffic,
+            buildingsEnabled: _buildings,
+            compassEnabled: false,
+            onCameraMove: (CameraPosition position) {
+              setState(() {
+                _compassRotation = position.bearing;
+                _currentLatLng = position.target;
+              });
+            },
           ),
           Column(
             children: <Widget>[
@@ -120,19 +297,28 @@ class _HomepageState extends State<Homepage> {
                         backgroundImage: AssetImage('assets/login/profile.jpg'),
                       ),
                     ),
-                    Container(
-                      width: 45,
-                      height: 45,
-                      decoration: BoxDecoration(
-                        color: Colors.white,
-                        borderRadius: BorderRadius.all(Radius.circular(10)),
-                      ),
-                      child: IconButton(
-                        onPressed: () async {
-
-                        },
-                        icon: Icon(Icons.notifications),
-                        color: Colors.green[500],
+                    ElevatedButton(
+                      onPressed: () async {
+                        await init();
+                        if (_isAlertSave! || _isTrendSave!) {
+                          context.push('/homepage/notifications_onboarding/settings');
+                        } else {
+                          context.push('/homepage/notifications_onboarding');
+                        }
+                      },
+                      child: Icon(Icons.notifications, color: Colors.green),
+                      style: ButtonStyle(
+                          backgroundColor: MaterialStateProperty.all(Colors.white),
+                          fixedSize: MaterialStateProperty.all(const Size(45, 45)),
+                          elevation: MaterialStateProperty.all(15),
+                          padding: MaterialStateProperty.all(const EdgeInsets.all(0)),
+                          minimumSize: MaterialStateProperty.all(const Size(30, 35)),
+                          shape: MaterialStateProperty.all(
+                            RoundedRectangleBorder(
+                              borderRadius: BorderRadius.circular(10),
+                            ),
+                          ),
+                          overlayColor: MaterialStateProperty.all(Colors.grey[300])
                       ),
                     ),
                   ],
@@ -143,71 +329,144 @@ class _HomepageState extends State<Homepage> {
           Positioned(
             top: 150,
             right: 30,
-            child: Container(
-                width: 45,
-                height: 45,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.all(Radius.circular(10)),
-                ),
-                child: TextButton(
-                    onPressed: () {
-                      
-                    }, 
-                    child: Image.asset('assets/icons/map_settings.png'),
-                )
-                // IconButton(
-                //   onPressed: () async {
-                //
-                //   },
-                //   icon: Icon(Icons.map_outlined),
-                //   color: Colors.green[600],
-                // ),
+            child: ElevatedButton(
+              onPressed: () {
+                setState(() {
+                  _mapSettings = !_mapSettings;
+                });
+              },
+              child:
+              Image.asset('assets/icons/map_settings.png', width: 40, height: 40,),
+              style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all(Colors.white),
+                  fixedSize: MaterialStateProperty.all(const Size(45, 45)),
+                  elevation: MaterialStateProperty.all(15),
+                  padding: MaterialStateProperty.all(const EdgeInsets.all(0)),
+                  minimumSize: MaterialStateProperty.all(const Size(30, 35)),
+                  shape: MaterialStateProperty.all(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  overlayColor: MaterialStateProperty.all(Colors.grey[300])
               ),
+            ),
           ),
           Positioned(
             bottom: 120,
             right: 30,
-            child: Container(
-                width: 45,
-                height: 45,
-                decoration: BoxDecoration(
-                  color: Colors.white,
-                  borderRadius: BorderRadius.all(Radius.circular(10)),
-                ),
-                child: IconButton(
-                  onPressed: () {
-                    _determinePosition();
-                  },
-                  icon: Icon(Icons.my_location),
-                  color: Colors.green[600],
-                )
-              // IconButton(
-              //   onPressed: () async {
-              //
-              //   },
-              //   icon: Icon(Icons.map_outlined),
-              //   color: Colors.green[600],
-              // ),
-            ),
+            child: ElevatedButton(
+              onPressed: () {
+                _determinePosition();
+              },
+              child: Icon(Icons.my_location, color: Colors.green,),
+              style: ButtonStyle(
+                  backgroundColor: MaterialStateProperty.all(Colors.white),
+                  fixedSize: MaterialStateProperty.all(const Size(45, 45)),
+                  elevation: MaterialStateProperty.all(15),
+                  padding: MaterialStateProperty.all(const EdgeInsets.all(0)),
+                  minimumSize: MaterialStateProperty.all(const Size(30, 35)),
+                  shape: MaterialStateProperty.all(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(10),
+                    ),
+                  ),
+                  overlayColor: MaterialStateProperty.all(Colors.grey[300])
+              ),
+            )
           ),
           Positioned(
             bottom: 120,
             child: InkWell(
               onTap: () {
-                context.push('/homepage/profile');
+
               },
-              child: Container(
-                width: 100,
-                height: 100,
-                decoration: BoxDecoration(
-                  color: Colors.red[600],
-                  shape: BoxShape.circle,
+              child: ElevatedButton(
+                onPressed: () {
+
+                },
+                child: Image.asset('assets/icons/alarm.png', width: 50, height: 50,),
+                  style: ButtonStyle(
+                    backgroundColor: MaterialStateProperty.all(Colors.red[400]),
+                    fixedSize: MaterialStateProperty.all(const Size(110, 110)),
+                    elevation: MaterialStateProperty.all(15),
+                    padding: MaterialStateProperty.all(const EdgeInsets.all(0)),
+                    minimumSize: MaterialStateProperty.all(const Size(30, 35)),
+                    shape: MaterialStateProperty.all(
+                    RoundedRectangleBorder(
+                      borderRadius: BorderRadius.circular(55),
+                      ),
+                    ),
+                    overlayColor: MaterialStateProperty.all(Colors.red[300])
+                  ),
                 ),
-                child: Icon(
-                  Icons.add_alert,
-                  color: Colors.white,
-                  size: 30,
+            ),
+          ),
+          Positioned(
+            top: 145,
+            left: 25,
+            child: FloatingActionButton(
+                onPressed: () {
+                  setState(() {
+                    _rotateMap();
+                  });
+                },
+                splashColor: Colors.grey[300],
+                backgroundColor: Colors.white,
+                mini: true,
+                child: Transform.rotate(
+                  angle: _compassRotation,
+                  child: Image.asset('assets/icons/compass.png', color: Colors.green[600], width: 30, height: 30,)
+                  // Icon(Icons.arrow_upward, color: Colors.white, size: 18,),
+              ),
+            ),
+          ),
+          Positioned(
+            bottom: 100,
+            child: Visibility(
+              visible: _mapSettings,
+              child: Container(
+                padding: EdgeInsets.fromLTRB(25, 15, 10, 0),
+                decoration: BoxDecoration(
+                    color: Colors.white,
+                    borderRadius: BorderRadius.all(Radius.circular(15))
+                ),
+                width:  MediaQuery.of(context).size.width - 60,
+                height: 295,
+                child: Column(
+                  crossAxisAlignment: CrossAxisAlignment.start,
+                  children: <Widget>[
+                    Row(
+                      mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                      children: <Widget>[
+                        Text('Map Type', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15, color: Colors.grey[600], fontFamily: 'OpenSans'), ),
+                        CloseButton(
+                          onPressed: () {
+                            setState(() {
+                              _mapSettings = !_mapSettings;
+                            });
+                          },
+                        )
+                      ],
+                    ),
+                    Container(
+                      height: 70,
+                      margin: EdgeInsets.only(top: 10, bottom: 25),
+                      child:  ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: mapTypeList,
+                      ),
+                    ),
+                    Text('Map Details', style: TextStyle(fontWeight: FontWeight.w500, fontSize: 15, color: Colors.grey[600], fontFamily: 'OpenSans'),),
+                    Container(
+                      height: 65,
+                      margin: EdgeInsets.only(top: 10),
+                      child:  ListView(
+                        scrollDirection: Axis.horizontal,
+                        children: mapDetailList,
+                      ),
+                    ),
+                  ],
                 ),
               ),
             ),

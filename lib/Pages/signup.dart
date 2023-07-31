@@ -19,7 +19,7 @@ class SignUp extends StatelessWidget {
               mainAxisAlignment: MainAxisAlignment.spaceAround,
               children: <Widget> [
                 Container(
-                  padding: const EdgeInsets.fromLTRB(0, 50, 0, 0),
+                  padding: const EdgeInsets.fromLTRB(0, 120, 0, 0),
                   child: Image.asset('assets/login/2.png', width: 220, height: 220, fit: BoxFit.contain),
                 ),
               ],
