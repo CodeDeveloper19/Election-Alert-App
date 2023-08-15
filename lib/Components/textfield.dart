@@ -1,21 +1,28 @@
 import 'package:flutter/material.dart';
 
-class MyTextField extends StatelessWidget {
-  const MyTextField({super.key, required this.hintText, this.controller, required this.obscureText, required this.iconName});
+class MyTextField extends StatefulWidget {
+  const MyTextField({super.key, required this.hintText, this.controller, required this.obscureText, required this.iconName, required this.textCapital});
 
   final String hintText;
   final dynamic controller;
   final bool obscureText;
   final dynamic iconName;
+  final dynamic textCapital;
 
+  @override
+  State<MyTextField> createState() => _MyTextFieldState();
+}
+
+class _MyTextFieldState extends State<MyTextField> {
   @override
   Widget build(BuildContext context) {
     return TextFormField(
-      controller: controller,
-      obscureText: obscureText,
+      textCapitalization: widget.textCapital,
+      controller: widget.controller,
+      obscureText: widget.obscureText,
       decoration: InputDecoration(
-        suffixIcon: iconName,
-        hintText: hintText,
+        suffixIcon: widget.iconName,
+        hintText: widget.hintText,
         enabledBorder: OutlineInputBorder(
           borderSide: const BorderSide(
              width: 2, color: Colors.white),

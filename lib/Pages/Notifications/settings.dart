@@ -61,7 +61,7 @@ class _NotificationSettingsState extends State<NotificationSettings> {
           crossAxisAlignment: CrossAxisAlignment.start,
           children: <Widget>[
             Container(
-              width: 140,
+              width: 120,
               margin: EdgeInsets.only(bottom: 15),
               child: TextButton(
                 onPressed: () {
@@ -71,21 +71,18 @@ class _NotificationSettingsState extends State<NotificationSettings> {
                   mainAxisAlignment: MainAxisAlignment.spaceBetween,
                   children: <Widget>[
                     Icon(Icons.arrow_back_rounded),
-                    Text('Back to Map', style: TextStyle(fontFamily: 'OpenSans', fontSize: 15, fontWeight: FontWeight.w600,), )
+                    Text('Back to Map', style: TextStyle(fontFamily: 'OpenSans', fontSize: 12, fontWeight: FontWeight.w500,), )
                   ],
                 ),
-                // style: ButtonStyle(
-                //   fixedSize: MaterialStateProperty.all(const Size(20, 20)),
-                // ),
               ),
             ),
-            Text('Notifications', style: TextStyle(fontFamily: 'OpenSans', fontSize: 25, fontWeight: FontWeight.w600,),),
+            Text('Notifications', style: TextStyle(fontFamily: 'OpenSans', fontSize: 25, fontWeight: FontWeight.w500,),),
             Container(
               padding: EdgeInsets.fromLTRB(10, 20, 10, 0),
-              child: Text('We may send you important notifications on alert levels and trends concerning electoral violence outside of your notifications settings', style: TextStyle(fontFamily: 'OpenSans', fontSize: 14, color: Colors.black45),),
+              child: Text('We may send you important notifications on alert levels and trends concerning electoral violence outside of your notifications settings', style: TextStyle(fontFamily: 'OpenSans', fontSize: 12, color: Colors.black45),),
             ),
             Container(
-              margin: EdgeInsets.only(top: 30, bottom: 20),
+              margin: EdgeInsets.only(top: 50, bottom: 20),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
@@ -96,13 +93,13 @@ class _NotificationSettingsState extends State<NotificationSettings> {
                           curve: Curves.easeInOut
                       );
                     },
-                    child: Text('Activity', style: TextStyle(color: Colors.black45, fontSize: 18),),
+                    child: Text('Activity', style: TextStyle(color: Colors.black45, fontSize: 15),),
                     style: ButtonStyle(
                       backgroundColor: MaterialStateProperty.all(_pageNumber == 1 ?  Colors.green[600] : Colors.transparent),
                       padding: MaterialStateProperty.all(EdgeInsets.symmetric(horizontal: 25, vertical: 10)),
                       shape: MaterialStateProperty.all(
                         RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
+                          borderRadius: BorderRadius.circular(30),
                         ),
                       ),
                     ),
@@ -117,13 +114,13 @@ class _NotificationSettingsState extends State<NotificationSettings> {
                         curve: Curves.easeInOut
                       );
                     },
-                    child: Text('Settings', style: TextStyle(color: Colors.black45, fontSize: 18),),
+                    child: Text('Settings', style: TextStyle(color: Colors.black45, fontSize: 15),),
                     style: ButtonStyle(
                       backgroundColor: MaterialStateProperty.all(_pageNumber == 2 ?  Colors.green[600] : Colors.transparent,),
                       padding: MaterialStateProperty.all(EdgeInsets.symmetric(horizontal: 25, vertical: 10)),
                       shape: MaterialStateProperty.all(
                         RoundedRectangleBorder(
-                          borderRadius: BorderRadius.circular(15),
+                          borderRadius: BorderRadius.circular(30),
                         ),
                       ),
                     ),
@@ -156,7 +153,7 @@ class _NotificationSettingsState extends State<NotificationSettings> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
-                              Text('Alert Notifications', style: TextStyle(fontFamily: 'OpenSans', fontSize: 18, fontWeight: FontWeight.w200,)),
+                              Text('Alert Notifications', style: TextStyle(fontFamily: 'OpenSans', fontSize: 13, fontWeight: FontWeight.w200,)),
                               Switch(
                                 value: _isAlert,
                                 onChanged: (value) {
@@ -173,7 +170,7 @@ class _NotificationSettingsState extends State<NotificationSettings> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
-                              Text('Trend Notifications', style: TextStyle(fontFamily: 'OpenSans', fontSize: 18, fontWeight: FontWeight.w200,)),
+                              Text('Trend Notifications', style: TextStyle(fontFamily: 'OpenSans', fontSize: 13, fontWeight: FontWeight.w200,)),
                               Switch(
                                   value: _isTrend,
                                   onChanged: (value) {
@@ -190,7 +187,7 @@ class _NotificationSettingsState extends State<NotificationSettings> {
                           Row(
                             mainAxisAlignment: MainAxisAlignment.spaceBetween,
                             children: <Widget>[
-                              Text('Push Notifications', style: TextStyle(fontFamily: 'OpenSans', fontSize: 18, fontWeight: FontWeight.w200,)),
+                              Text('Push Notifications', style: TextStyle(fontFamily: 'OpenSans', fontSize: 13, fontWeight: FontWeight.w200,)),
                               Switch(
                                   value: _isPush,
                                   onChanged: (value) {

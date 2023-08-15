@@ -44,8 +44,7 @@ class _NotificationsOnboardingState extends State<NotificationsOnboarding> {
                 padding: EdgeInsets.symmetric(horizontal: 60),
                 child: ElevatedButton(
                   onPressed: () {
-                    context.pop();
-                    context.push('/homepage/notifications_onboarding/settings');
+                    context.pushReplacement('/auth/homepage/notifications_onboarding/settings');
                   },
                   style: ButtonStyle(
                     backgroundColor: MaterialStateProperty.all(Colors.green[600]),

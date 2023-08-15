@@ -1,3 +1,5 @@
+import 'dart:math';
+import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:flutter/material.dart';
 import 'package:firebase_auth/firebase_auth.dart';
 import 'package:go_router/go_router.dart';
@@ -18,9 +20,13 @@ class _HomepageState extends State<Homepage> {
 
   void initState() {
     super.initState();
-    _determinePosition();
     init();
   }
+
+  final firestore = FirebaseFirestore.instance;
+  User? user = FirebaseAuth.instance.currentUser;
+
+  String _profileImageURL = 'https://firebasestorage.googleapis.com/v0/b/election-alert-app-fa31b.appspot.com/o/default_image%2F10.png?alt=media&token=74eba9ef-b70c-44f5-9069-eede7a72e8d1';
 
   LocationData? _locationData;
   late GoogleMapController mapController;
@@ -47,10 +53,38 @@ class _HomepageState extends State<Homepage> {
   }
 
   Future init() async {
+    await getUserData();
+    await _determinePosition();
     preferences = await SharedPreferences.getInstance();
 
     _isAlertSave = preferences.getBool('alert_notifications');
     _isTrendSave = preferences.getBool('trend_notifications');
+
+    if (_isTrendSave == null && _isAlertSave == null){
+      setState(() {
+        _isAlertSave = false;
+        _isTrendSave = false;
+      });
+    }
+  }
+
+  Future getUserData () async {
+    imageCache.clear();
+    try {
+      DocumentSnapshot documentSnapshot = await firestore.collection('users').doc(user!.uid).get();
+
+      if (documentSnapshot.exists) {
+        Map<String, dynamic> userData = documentSnapshot.data() as Map<String, dynamic>;
+        String link = userData['imageLink'];
+        setState(() {
+          _profileImageURL = link;
+        });
+      } else {
+        print('Document does not exist');
+      }
+    } catch (e) {
+      print('Error getting user data: $e');
+    }
   }
 
   Future<void> _determinePosition () async {
@@ -290,20 +324,25 @@ class _HomepageState extends State<Homepage> {
                   children: <Widget>[
                     InkWell(
                       onTap: () {
-                        context.push('/homepage/profile');
+                        context.go('/auth/homepage/profile');
                       },
-                      child:  CircleAvatar(
-                        radius: 20, // Image radius
-                        backgroundImage: AssetImage('assets/login/profile.jpg'),
+                      child:  Builder(
+                          builder: (BuildContext context){
+                            return CircleAvatar(
+                                radius: 20,
+                                backgroundColor: Colors.grey[300],
+                                backgroundImage: Image.network(_profileImageURL, key: ValueKey(new Random().nextInt(300))).image// Image radius
+                            );
+                          }
                       ),
                     ),
                     ElevatedButton(
                       onPressed: () async {
                         await init();
                         if (_isAlertSave! || _isTrendSave!) {
-                          context.push('/homepage/notifications_onboarding/settings');
+                          context.push('/auth/homepage/notifications_onboarding/settings');
                         } else {
-                          context.push('/homepage/notifications_onboarding');
+                          context.push('/auth/homepage/notifications_onboarding');
                         }
                       },
                       child: Icon(Icons.notifications, color: Colors.green),

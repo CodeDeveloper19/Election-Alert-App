@@ -108,7 +108,7 @@ class _ForgotFormState extends State<ForgotForm> {
           children: <Widget>[
             Container(
               margin: EdgeInsets.only(bottom: 20, left: 5, right: 5),
-              child: MyTextField(hintText: 'Email Address', controller: emailController, obscureText: false, iconName: Icon(Icons.email)),
+              child: MyTextField(hintText: 'Email Address', controller: emailController, obscureText: false, iconName: Icon(Icons.email), textCapital: TextCapitalization.none,),
             ),
               Container(
               margin: EdgeInsets.symmetric(horizontal: 10, vertical: 0),

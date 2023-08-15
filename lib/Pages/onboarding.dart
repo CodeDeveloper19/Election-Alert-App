@@ -34,15 +34,12 @@ class OnBoarding extends StatelessWidget {
             ),
           ),
           trailingFunction: () {
-            // Navigator.of(context).pushReplacementNamed('/onboarding/login');
-            // context.pushReplacement('/login');
-            context.push('/auth/login');
-            // return Login();
+            context.go('/auth/login');
           },
           headerBackgroundColor: Colors.white,
           finishButtonText: 'Register',
           onFinish: () {
-            context.push('/auth/signup');
+            context.go('/auth/signup');
           },
           centerBackground: true,
           finishButtonStyle: FinishButtonStyle(

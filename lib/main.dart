@@ -63,36 +63,64 @@ class _MyAppState extends State<MyApp> {
               return const SignUp();
             },
           ),
+          GoRoute(
+              path: 'homepage',
+              builder: (BuildContext context, GoRouterState state) {
+                return const Homepage();
+              },
+              routes: <RouteBase>[
+                GoRoute(
+                  path: 'profile',
+                  builder: (BuildContext context, GoRouterState state) {
+                    return const ProfileSettings();
+                  },
+                ),
+                GoRoute(
+                    path: 'notifications_onboarding',
+                    builder: (BuildContext context, GoRouterState state) {
+                      return const NotificationsOnboarding();
+                    },
+                    routes: <RouteBase>[
+                      GoRoute(
+                        path: 'settings',
+                        builder: (BuildContext context, GoRouterState state) {
+                          return const NotificationSettings();
+                        },
+                      ),
+                    ]
+                ),
+              ]
+          ),
         ],
       ),
-      GoRoute(
-        path: '/homepage',
-        builder: (BuildContext context, GoRouterState state) {
-          return const Homepage();
-        },
-        routes: <RouteBase>[
-          GoRoute(
-           path: 'profile',
-           builder: (BuildContext context, GoRouterState state) {
-             return const ProfileSettings();
-           },
-         ),
-         GoRoute(
-            path: 'notifications_onboarding',
-            builder: (BuildContext context, GoRouterState state) {
-              return const NotificationsOnboarding();
-            },
-             routes: <RouteBase>[
-               GoRoute(
-                 path: 'settings',
-                 builder: (BuildContext context, GoRouterState state) {
-                   return const NotificationSettings();
-                 },
-               ),
-             ]
-          ),
-        ]
-      ),
+      // GoRoute(
+      //   path: '/homepage',
+      //   builder: (BuildContext context, GoRouterState state) {
+      //     return const Homepage();
+      //   },
+      //   routes: <RouteBase>[
+      //     GoRoute(
+      //      path: 'profile',
+      //      builder: (BuildContext context, GoRouterState state) {
+      //        return const ProfileSettings();
+      //      },
+      //    ),
+      //     GoRoute(
+      //       path: 'notifications_onboarding',
+      //       builder: (BuildContext context, GoRouterState state) {
+      //         return const NotificationsOnboarding();
+      //       },
+      //        routes: <RouteBase>[
+      //          GoRoute(
+      //            path: 'settings',
+      //            builder: (BuildContext context, GoRouterState state) {
+      //              return const NotificationSettings();
+      //            },
+      //          ),
+      //        ]
+      //     ),
+      //   ]
+      // ),
     ],
   );
 
