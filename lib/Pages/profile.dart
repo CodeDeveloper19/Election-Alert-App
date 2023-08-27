@@ -6,9 +6,7 @@ import 'package:firebase_auth/firebase_auth.dart';
 import 'package:election_alert_app/Components/textfield.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
 import 'package:image_picker/image_picker.dart';
-import 'package:path_provider/path_provider.dart';
 import 'package:election_alert_app/Utilities/upload_images.dart';
-import 'package:tuple/tuple.dart';
 import '../Components/phone_number_field.dart';
 
 

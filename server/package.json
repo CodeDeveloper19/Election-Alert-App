@@ -1,0 +1,27 @@
+{
+  "dependencies": {
+    "express": "^4.18.2",
+    "nodemon": "^3.0.1",
+    "socket.io": "^4.7.2"
+  },
+  "scripts": {
+    "start": "node server.js",
+    "develop": "nodemon server.js"
+  },
+  "type": "module",
+  "name": "election-alert-app-backend",
+  "version": "1.0.0",
+  "main": "server.js",
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/CodeDeveloper19/Election-Alert-App-Backend.git"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/CodeDeveloper19/Election-Alert-App-Backend/issues"
+  },
+  "homepage": "https://github.com/CodeDeveloper19/Election-Alert-App-Backend#readme",
+  "description": ""
+}

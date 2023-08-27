@@ -1,0 +1,34 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<!DOCTYPE plist PUBLIC "-//Apple//DTD PLIST 1.0//EN" "http://www.apple.com/DTDs/PropertyList-1.0.dtd">
+<plist version="1.0">
+<dict>
+	<key>CLIENT_ID</key>
+	<string>763388255833-8fbhrjpq7qhf6vreirhs5us7jbj8p9j2.apps.googleusercontent.com</string>
+	<key>REVERSED_CLIENT_ID</key>
+	<string>com.googleusercontent.apps.763388255833-8fbhrjpq7qhf6vreirhs5us7jbj8p9j2</string>
+	<key>API_KEY</key>
+	<string>AIzaSyCk1bvmqhAaj86HFrcna81wMEfCWl4xIfM</string>
+	<key>GCM_SENDER_ID</key>
+	<string>763388255833</string>
+	<key>PLIST_VERSION</key>
+	<string>1</string>
+	<key>BUNDLE_ID</key>
+	<string>com.vykaa.electionAlertApp</string>
+	<key>PROJECT_ID</key>
+	<string>election-alert-app-fa31b</string>
+	<key>STORAGE_BUCKET</key>
+	<string>election-alert-app-fa31b.appspot.com</string>
+	<key>IS_ADS_ENABLED</key>
+	<false></false>
+	<key>IS_ANALYTICS_ENABLED</key>
+	<false></false>
+	<key>IS_APPINVITE_ENABLED</key>
+	<true></true>
+	<key>IS_GCM_ENABLED</key>
+	<true></true>
+	<key>IS_SIGNIN_ENABLED</key>
+	<true></true>
+	<key>GOOGLE_APP_ID</key>
+	<string>1:763388255833:ios:e0513f9c4b34864c495b48</string>
+</dict>
+</plist>
