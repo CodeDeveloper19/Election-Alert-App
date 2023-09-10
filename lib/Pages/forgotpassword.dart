@@ -58,10 +58,9 @@ class _ForgotFormState extends State<ForgotForm> {
         behavior: SnackBarBehavior.floating,
         backgroundColor: Colors.transparent,
         margin: EdgeInsets.only(
-            bottom: MediaQuery.of(context).size.height - 100,
-            left: 10,
-            right: 10,
-            top: 55
+          bottom: MediaQuery.of(context).size.height - 280,
+          left: 10,
+          right: 10,
         ),
         content: AwesomeSnackbarContent(
           title: 'Password Reset Sent',
@@ -82,10 +81,9 @@ class _ForgotFormState extends State<ForgotForm> {
         behavior: SnackBarBehavior.floating,
         backgroundColor: Colors.transparent,
         margin: EdgeInsets.only(
-            bottom: MediaQuery.of(context).size.height - 100,
-            left: 10,
-            right: 10,
-            top: 55
+          bottom: MediaQuery.of(context).size.height - 280,
+          left: 10,
+          right: 10,
         ),
         content: AwesomeSnackbarContent(
           title: 'Error!',

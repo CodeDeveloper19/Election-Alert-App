@@ -105,9 +105,11 @@ class _LoginFormState extends State<LoginForm> {
     preferences = await SharedPreferences.getInstance();
 
     _remember = preferences.getBool('remember');
-    setState(() {
-      _isChecked = _remember!;
-    });
+    if (_remember != null) {
+      setState(() {
+        _isChecked = _remember!;
+      });
+    }
 
     if (_isChecked){
       _emailAddress = preferences.getString('email');
@@ -131,10 +133,9 @@ class _LoginFormState extends State<LoginForm> {
         backgroundColor: Colors.transparent,
         padding: EdgeInsets.symmetric(horizontal: 30, vertical: 30),
         margin: EdgeInsets.only(
-            bottom: MediaQuery.of(context).size.height - 100,
+            bottom: MediaQuery.of(context).size.height - 280,
             left: 10,
             right: 10,
-            top: 55
         ),
         content: AwesomeSnackbarContent(
           title: 'Error!',
@@ -149,7 +150,6 @@ class _LoginFormState extends State<LoginForm> {
 
   Future<void> savingCredentials () async {
     if (_isChecked){
-      await preferences.setString('email', emailAddressController.text);
       await preferences.setString('password', passwordController.text);
       await preferences.setBool('remember', _isChecked);
       await preferences.setBool('autoSignOut', _isCheckedAutomatic);

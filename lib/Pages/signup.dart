@@ -1,3 +1,5 @@
+import 'dart:convert';
+import 'package:geocoding/geocoding.dart';
 import 'package:election_alert_app/Components/phone_number_field.dart';
 import 'package:flutter/material.dart';
 import 'package:election_alert_app/Components/textfield.dart';
@@ -6,6 +8,9 @@ import 'package:go_router/go_router.dart';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:shared_preferences/shared_preferences.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:searchfield/searchfield.dart';
+import 'package:flutter/services.dart' show rootBundle;
+
 
 class SignUp extends StatefulWidget {
   const SignUp({super.key});
@@ -96,8 +101,57 @@ class _SignUpFormState extends State<SignUpForm> {
 
   bool _isRevealed = true;
 
-  final List<String> electionRoleItems = ['Electoral Official', 'Security Operative'];
-  String selectedItem = 'Electoral Official';
+  List<dynamic> pollingUnitData = [];
+
+  final List<String> electionRoleItems = ['Select your electoral role', 'Electoral Official', 'Security Operative'];
+  String selectedItem = 'Select your electoral role';
+
+  TextEditingController searchController = TextEditingController();
+
+  late double longitude;
+  late double latitude;
+
+  final List<String> pollingStates = [
+    "Select your polling unit's state",
+    "Abia",
+    "Adamawa",
+    "Akwa Ibom",
+    "Anambra",
+    "Bauchi",
+    "Bayelsa",
+    "Benue",
+    "Borno",
+    "Cross River",
+    "Delta",
+    "Ebonyi",
+    "Edo",
+    "Ekiti",
+    "Enugu",
+    "FCT - Abuja",
+    "Gombe",
+    "Imo",
+    "Jigawa",
+    "Kaduna",
+    "Kano",
+    "Katsina",
+    "Kebbi",
+    "Kogi",
+    "Kwara",
+    "Lagos",
+    "Nasarawa",
+    "Niger",
+    "Ogun",
+    "Ondo",
+    "Osun",
+    "Oyo",
+    "Plateau",
+    "Rivers",
+    "Sokoto",
+    "Taraba",
+    "Yobe",
+    "Zamfara"
+  ];
+  String selectedState = "Select your polling unit's state";
 
   late String userPhoneNumber = '';
   bool _isPhoneNumberValid = false;
@@ -114,6 +168,14 @@ class _SignUpFormState extends State<SignUpForm> {
     });
   }
 
+  Future<void> loadJsonData(a) async {
+    final jsonString = await rootBundle.loadString('assets/polling_units_$a.json');
+    final jsonResponse = json.decode(jsonString);
+
+    setState(() {
+      pollingUnitData = jsonResponse;
+    });
+  }
 
   void _showSnackbarSuccess(message) {
     ScaffoldMessenger.of(context).showSnackBar(
@@ -123,10 +185,9 @@ class _SignUpFormState extends State<SignUpForm> {
         behavior: SnackBarBehavior.floating,
         backgroundColor: Colors.transparent,
         margin: EdgeInsets.only(
-            bottom: MediaQuery.of(context).size.height - 100,
-            left: 10,
-            right: 10,
-            top: 55
+          bottom: MediaQuery.of(context).size.height - 280,
+          left: 10,
+          right: 10,
         ),
         content: AwesomeSnackbarContent(
           title: 'Account Creation Successful',
@@ -148,10 +209,9 @@ class _SignUpFormState extends State<SignUpForm> {
         backgroundColor: Colors.transparent,
         padding: EdgeInsets.symmetric(horizontal: 30, vertical: 30),
         margin: EdgeInsets.only(
-            bottom: MediaQuery.of(context).size.height - 100,
-            left: 10,
-            right: 10,
-            top: 55
+          bottom: MediaQuery.of(context).size.height - 280,
+          left: 10,
+          right: 10,
         ),
         content: AwesomeSnackbarContent(
           title: 'Error!',
@@ -174,8 +234,8 @@ class _SignUpFormState extends State<SignUpForm> {
   }
 
   Future<void> savingCredentials () async {
-    await preferences.setString('email', emailController.text);
     await preferences.setString('password', passwordController.text);
+    await preferences.setString('activity', '{}');
   }
 
   Future uploadUserDetails (User? user) async {
@@ -185,11 +245,36 @@ class _SignUpFormState extends State<SignUpForm> {
         'lastName': lastNameController.text,
         'phoneNumber': userPhoneNumber,
         'electoralRole': selectedItem,
+        'emailAddressVerified': false,
+        'phoneNumberVerified': false,
+        'alertSave': false,
+        'pollingAddress': '${searchController.text}, $selectedState State, Nigeria',
+        'pollingAddressLatitude': latitude,
+        'pollingAddressLongitude': longitude,
         'imageLink': 'https://firebasestorage.googleapis.com/v0/b/election-alert-app-fa31b.appspot.com/o/default_image%2F10.png?alt=media&token=74eba9ef-b70c-44f5-9069-eede7a72e8d1'
       });
     }
     catch (e) {
       print(e);
+    }
+  }
+
+  Future <bool> searchForLatLng () async {
+    try {
+      if (searchController.text != '' && selectedState != "Select your polling unit's state"){
+        List<Location> locations = await locationFromAddress("${searchController.text}, $selectedState State, Nigeria");
+        setState(() {
+          latitude = locations.first.latitude;
+          longitude = locations.first.longitude;
+        });
+      } else {
+        _showSnackbarError("There is a problem with your polling unit's state or address input");
+      }
+      return true;
+    } catch (e) {
+      _showSnackbarError(e);
+      print(e);
+      return false;
     }
   }
 
@@ -255,39 +340,106 @@ class _SignUpFormState extends State<SignUpForm> {
               child:  MyTextField(hintText: 'Email Address', controller: emailController, obscureText: false, iconName: const Icon(Icons.email), textCapital: TextCapitalization.none,),
             ),
             PhoneNumberTextField(userPhoneNumber: userPhoneNumber, isPhoneNumberValid: _isPhoneNumberValid, phoneController: phoneController, updateUserPhoneNumber: updatePhoneNumber, updateIsPhoneNumberValid: updateIsPhoneNumberValid,),
-            Container(
-              margin: const EdgeInsets.only(top: 15, bottom: 10),
-              padding: const EdgeInsets.only(left: 20, right: 9),
-              width: MediaQuery.of(context).size.width,
-              height: 45,
-              decoration: BoxDecoration(
-                color: Colors.grey[300],
-                borderRadius: BorderRadius.circular(10),
-              ),
-              child: DropdownButton<String>(
-                value: selectedItem,
-                style: TextStyle(color: Colors.grey[700], fontSize: 16),
-                icon: Padding(
-                  padding: EdgeInsets.only(left: (MediaQuery.of(context).size.width - 60) - 165),
-                  child: Icon(Icons.arrow_drop_down, size: 24,),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                margin: const EdgeInsets.only(top: 15, bottom: 10),
+                padding: const EdgeInsets.only(left: 20, right: 9),
+                height: 45,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(10),
                 ),
-                underline: Container(
-                  height: 0,
+                child: DropdownButton<String>(
+                  value: selectedItem,
+                  style: TextStyle(color: Colors.grey[700], fontSize: 16),
+                  icon: Icon(Icons.arrow_drop_down, size: 24,),
+                  underline: Container(
+                    height: 0,
+                  ),
+                  onChanged: (String? newValue) {
+                    if (newValue != null) {
+                      setState(() {
+                        selectedItem = newValue;
+                      });
+                    }
+                  },
+                  items: electionRoleItems.map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
                 ),
-                onChanged: (String? newValue) {
-                  if (newValue != null) {
-                    setState(() {
-                      selectedItem = newValue;
-                    });
-                  }
-                },
-                items: electionRoleItems.map<DropdownMenuItem<String>>((String value) {
-                  return DropdownMenuItem<String>(
-                    value: value,
-                    child: Text(value),
-                  );
-                }).toList(),
               ),
+            ),
+            Align(
+              alignment: Alignment.centerLeft,
+              child: Container(
+                margin: const EdgeInsets.only(top: 15, bottom: 10),
+                padding: const EdgeInsets.only(left: 20, right: 9),
+                height: 45,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: DropdownButton<String>(
+                  value: selectedState,
+                  style: TextStyle(color: Colors.grey[700], fontSize: 16),
+                  icon: Icon(Icons.arrow_drop_down, size: 24,),
+                  underline: Container(
+                    height: 0,
+                  ),
+                  onChanged: (String? newValue) {
+                    if (newValue != null) {
+                      setState(() {
+                        selectedState = newValue;
+                      });
+                      if (selectedState != "Select your polling unit's state"){
+                        loadJsonData(selectedState);
+                      }
+                    }
+                  },
+                  items: pollingStates.map<DropdownMenuItem<String>>((String value) {
+                    return DropdownMenuItem<String>(
+                      value: value,
+                      child: Text(value),
+                    );
+                  }).toList(),
+                ),
+              ),
+            ),
+            IgnorePointer(
+              child: Container(
+                margin: const EdgeInsets.only(top: 15, bottom: 10),
+                padding: const EdgeInsets.only(left: 20, right: 9),
+                width: MediaQuery.of(context).size.width,
+                height: 45,
+                decoration: BoxDecoration(
+                  color: Colors.grey[300],
+                  borderRadius: BorderRadius.circular(10),
+                ),
+                child: SearchField(
+                  suggestions: pollingUnitData
+                      .map((e) => SearchFieldListItem(e, child:
+                  Padding(
+                    padding: const EdgeInsets.symmetric(horizontal:16.0),
+                    child: Text(e),
+                  ),
+                  ))
+                      .toList(),
+                  searchInputDecoration: InputDecoration(
+                    hintText: 'Search for your polling unit',
+                    hintStyle: TextStyle(color: (selectedState == "Select your polling unit's state") ? Colors.grey[400] : Colors.black54
+                    ),
+                    border: InputBorder.none, // Remove the underline here
+                  ),
+                  suggestionDirection: SuggestionDirection.up,
+                  controller: searchController,
+                  scrollbarAlwaysVisible: true,
+                ),
+              ),
+              ignoring: (selectedState == "Select your polling unit's state") ? true : false
             ),
             Container(
               margin: const EdgeInsets.only(top: 15, bottom: 25),
@@ -296,16 +448,21 @@ class _SignUpFormState extends State<SignUpForm> {
             Container(
               margin: EdgeInsets.symmetric(horizontal: 0, vertical: 0),
               child: ElevatedButton(
-                onPressed: () {
+                onPressed: () async {
+                  FocusManager.instance.primaryFocus?.unfocus();
                   widget.onUpdate();
-                  // FocusManager.instance.primaryFocus?.unfocus();
-                  // widget.onUpdate();
-                  // if (passwordController.text == "" || emailController.text == "" || firstNameController == "" || lastNameController == "" || phoneController == ""){
-                  //   widget.onUpdate();
-                  //   _showSnackbarError('One or more input fields are empty');
-                  // } else {
-                  //   Signup();
-                  // }
+                  if (passwordController.text == "" || emailController.text == "" || firstNameController == ""
+                  || lastNameController == "" || phoneController == ""
+                  || searchController.text == "" || selectedItem == 'Select your electoral role'
+                  || selectedState == "Select your polling unit's state"){
+                    widget.onUpdate();
+                    _showSnackbarError('One or more input fields are empty');
+                  } else {
+                    bool response = await searchForLatLng();
+                    if (response) {
+                      Signup();
+                    }
+                  }
                 },
                 style: ButtonStyle(
                   backgroundColor: MaterialStateProperty.all(Colors.green[600]),

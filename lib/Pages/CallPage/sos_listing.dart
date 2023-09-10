@@ -278,7 +278,6 @@ class _SosListingState extends State<SosListing> {
                     children: phoneNumbers.asMap().entries.map((entry) {
                       int index = entry.key;
                       String phoneNumber = entry.value;
-
                       return Row(
                         mainAxisAlignment: MainAxisAlignment.spaceBetween,
                         children: <Widget>[
