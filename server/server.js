@@ -10,8 +10,7 @@ io.on('connection', (socket) => {
   console.log('A user connected');
 
   socket.on('alert_sent', (msg) => {
-    console.log(msg);
-    io.emit('received_alert', msg);
+    socket.broadcast.emit('received_alert', msg);
   });
 
   socket.on('disconnect', () => {

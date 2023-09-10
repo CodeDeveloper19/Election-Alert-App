@@ -93,34 +93,6 @@ class _MyAppState extends State<MyApp> {
           ),
         ],
       ),
-      // GoRoute(
-      //   path: '/homepage',
-      //   builder: (BuildContext context, GoRouterState state) {
-      //     return const Homepage();
-      //   },
-      //   routes: <RouteBase>[
-      //     GoRoute(
-      //      path: 'profile',
-      //      builder: (BuildContext context, GoRouterState state) {
-      //        return const ProfileSettings();
-      //      },
-      //    ),
-      //     GoRoute(
-      //       path: 'notifications_onboarding',
-      //       builder: (BuildContext context, GoRouterState state) {
-      //         return const NotificationsOnboarding();
-      //       },
-      //        routes: <RouteBase>[
-      //          GoRoute(
-      //            path: 'settings',
-      //            builder: (BuildContext context, GoRouterState state) {
-      //              return const NotificationSettings();
-      //            },
-      //          ),
-      //        ]
-      //     ),
-      //   ]
-      // ),
     ],
   );
 
@@ -128,41 +100,8 @@ class _MyAppState extends State<MyApp> {
   Widget build(BuildContext context) {
     // whenever your initialization is completed, remove the splash screen:
     return MaterialApp.router(
-      // initialRoute: '/',
       debugShowCheckedModeBanner: false,
-      // routes: {
-      //   '/homepage': (context) => const Homepage(),
-      //   '/onboarding': (context) => const OnBoarding(),
-      //   '/onboarding/login': (context) => const Login(),
-      //   '/signup': (context) => const SignUp(),
-      //   '/forgot': (context) => const Forgot(),
-      // },
       routerConfig: _router,
-      // body: StreamBuilder<User?>(
-      //   stream: FirebaseAuth.instance.authStateChanges(),
-      //   builder: (context, snapshot) {
-      //     print('working');
-      //     if (snapshot.hasData){
-      //       print("A");
-      //       return Homepage();
-      //     } else {
-      //       print("B");
-      //       return OnBoarding();
-      //     }
-      //   },
-      // ),
     );
-    //   MaterialApp(
-    //   // initialRoute: '/auth',
-    //   debugShowCheckedModeBanner: false,
-    //   // routes: {
-    //   //   '/': (context) => const OnBoarding(),
-    //   //   '/homepage': (context) => const Homepage(),
-    //   //   '/login': (context) => const Login(),
-    //   //   '/signup': (context) => const SignUp(),
-    //   //   '/forgot': (context) => const Forgot(),
-    //   //   '/auth': (context) => const AuthPage()
-    //   // },
-    // );
   }
 }

@@ -1,6 +1,10 @@
+import 'dart:convert';
+import 'package:cloud_firestore/cloud_firestore.dart';
+import 'package:firebase_auth/firebase_auth.dart';
 import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:shared_preferences/shared_preferences.dart';
+import 'package:timeago/timeago.dart' as timeago;
 
 class NotificationSettings extends StatefulWidget {
   const NotificationSettings({super.key});
@@ -11,6 +15,9 @@ class NotificationSettings extends StatefulWidget {
 
 class _NotificationSettingsState extends State<NotificationSettings> {
   late SharedPreferences preferences;
+
+  final firestore = FirebaseFirestore.instance;
+  User? user = FirebaseAuth.instance.currentUser;
 
   final _controller = PageController(
     initialPage: 0
@@ -23,32 +30,51 @@ class _NotificationSettingsState extends State<NotificationSettings> {
 
   late int _pageNumber = 1;
   bool _isAlert = false;
-  bool _isTrend = false;
-  bool _isPush = false;
 
   late bool? _isAlertSave;
-  late bool? _isTrendSave;
-  late bool? _isPushSave;
+  late String timeAgo = '';
 
+  Map<String, dynamic> _activity = {};
 
   Future init() async {
     preferences = await SharedPreferences.getInstance();
+    await retrieveActivityList();
 
     _isAlertSave = preferences.getBool('alert_notifications');
-    _isTrendSave = preferences.getBool('trend_notifications');
-    _isPushSave = preferences.getBool('push_notifications');
 
-    setState(() {
-      _isAlert = _isAlertSave!;
-      _isTrend = _isTrendSave!;
-      _isPush = _isPushSave!;
-    });
+    if (_isAlertSave != null) {
+      setState(() {
+        _isAlert = _isAlertSave!;
+      });
+    }
   }
+
+  Future<void> retrieveActivityList () async {
+    String? jsonData = preferences.getString('activity');
+    if (jsonData != null) {
+      Map<String, dynamic> storedData = jsonDecode(jsonData);
+      storedData = await convertTimeAgo(storedData);
+      setState(() {
+        _activity = storedData;
+      });
+    }
+  }
+
+  Future<Map<String, dynamic>> convertTimeAgo (Map<String, dynamic> storedData) async {
+    Map<String, dynamic> updatedMap = {};
+    // Iterate over the original map and update keys in the new map
+    storedData.forEach((key, value) {
+      DateTime dateTime = DateTime.parse(key);
+      timeAgo = timeago.format(dateTime, locale: 'en_short');
+      updatedMap[key] = value;
+      updatedMap[key][2] = timeAgo;
+    });
+    return updatedMap;
+  }
+
 
   Future<void> savingNotifications () async {
     await preferences.setBool('alert_notifications', _isAlert);
-    await preferences.setBool('trend_notifications', _isTrend);
-    await preferences.setBool('push_notifications', _isPush);
   }
 
   @override
@@ -82,7 +108,7 @@ class _NotificationSettingsState extends State<NotificationSettings> {
               child: Text('We may send you important notifications on alert levels and trends concerning electoral violence outside of your notifications settings', style: TextStyle(fontFamily: 'OpenSans', fontSize: 12, color: Colors.black45),),
             ),
             Container(
-              margin: EdgeInsets.only(top: 50, bottom: 20),
+              margin: EdgeInsets.only(top: 50, bottom: 10),
               child: Row(
                 mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
@@ -139,9 +165,90 @@ class _NotificationSettingsState extends State<NotificationSettings> {
                 },
                 children: <Widget>[
                   Container(
+                    padding: EdgeInsets.only(left: 20, right: 30, bottom: 30),
                     child: SingleChildScrollView(
                       child: Column(
-
+                        children: [
+                          Align(
+                            alignment: Alignment.centerRight,
+                            child: TextButton(
+                                onPressed: () async {
+                                  preferences.setString('activity', '{}');
+                                  setState(() {
+                                    _activity = {};
+                                  });
+                                },
+                                child: Text('Clear All', style: TextStyle(color: Colors.blue[200], fontStyle: FontStyle.italic),)
+                            ),
+                          ),
+                          (_activity.isEmpty) ? Column(
+                            children: [
+                              SizedBox(
+                                height: 30,
+                              ),
+                              Text('There is no recent activity here', style: TextStyle(fontStyle: FontStyle.italic, color: Colors.grey[600]),),
+                              SizedBox(
+                                height: 10,
+                              ),
+                              Image.asset('assets/icons/empty.png', height: 70, width: 70,)
+                            ],
+                          ) : Column(
+                            children: _activity.entries.map((entry) {
+                              List<dynamic> dateTimeValue = entry.value;
+                              return Container(
+                                height: 90,
+                                child: Row(
+                                  children: [
+                                    Align(
+                                      alignment: Alignment.topCenter,
+                                      child:  CircleAvatar(
+                                          radius: 20,
+                                          backgroundColor: Colors.grey[300],
+                                          backgroundImage: (dateTimeValue[1] == 'assets/icons/ic_launcher.png') ? Image.asset(dateTimeValue[1]).image : Image.network(preferences.getString('imageLink')!).image// Image radius
+                                      ),
+                                    ),
+                                    SizedBox(
+                                      width: 20,
+                                    ),
+                                    Expanded(
+                                      child: Padding(
+                                        padding: EdgeInsets.only(top: 5),
+                                        child: Column(
+                                          mainAxisAlignment: MainAxisAlignment.start,
+                                          crossAxisAlignment: CrossAxisAlignment.start,
+                                          children: [
+                                            Row(
+                                              mainAxisAlignment: MainAxisAlignment.start,
+                                              children: [
+                                                Text('Election Alert App', style: TextStyle(fontSize: 10, color: Colors.grey[600]),),
+                                                SizedBox(
+                                                  width: 5,
+                                                ),
+                                                CircleAvatar(
+                                                  backgroundColor: Colors.grey,
+                                                  radius: 2.0, // Adjust the size of the circle dot as needed
+                                                ),
+                                                SizedBox(
+                                                  width: 5,
+                                                ),
+                                                Text(dateTimeValue[2], style: TextStyle(fontSize: 10, color: Colors.grey[600]),),
+                                              ],
+                                            ),
+                                            SizedBox(
+                                              height: 5,
+                                            ),
+                                            Text(dateTimeValue[0],
+                                              overflow: TextOverflow.ellipsis, maxLines: 2, style: TextStyle(height: 1.5, fontStyle: FontStyle.italic, color: Colors.grey[800]),)
+                                          ],
+                                        ),
+                                      ),
+                                    ),
+                                  ],
+                                ),
+                              );
+                            }).toList(),
+                          )
+                        ],
                       ),
                     ),
                   ),
@@ -156,10 +263,18 @@ class _NotificationSettingsState extends State<NotificationSettings> {
                               Text('Alert Notifications', style: TextStyle(fontFamily: 'OpenSans', fontSize: 13, fontWeight: FontWeight.w200,)),
                               Switch(
                                 value: _isAlert,
-                                onChanged: (value) {
+                                onChanged: (value) async {
                                   setState(() {
                                     _isAlert = value;
                                   });
+                                  try{
+                                    await firestore.collection('users/').doc(user!.uid).update({
+                                      'alertSave': value,
+                                    });
+                                  }
+                                  catch (e) {
+                                    print(e);
+                                  }
                                 }
                               )
                             ],
@@ -167,36 +282,8 @@ class _NotificationSettingsState extends State<NotificationSettings> {
                           SizedBox(
                             height: 10,
                           ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              Text('Trend Notifications', style: TextStyle(fontFamily: 'OpenSans', fontSize: 13, fontWeight: FontWeight.w200,)),
-                              Switch(
-                                  value: _isTrend,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _isTrend = value;
-                                    });
-                                  }
-                              )
-                            ],
-                          ),
                           SizedBox(
                             height: 10,
-                          ),
-                          Row(
-                            mainAxisAlignment: MainAxisAlignment.spaceBetween,
-                            children: <Widget>[
-                              Text('Push Notifications', style: TextStyle(fontFamily: 'OpenSans', fontSize: 13, fontWeight: FontWeight.w200,)),
-                              Switch(
-                                  value: _isPush,
-                                  onChanged: (value) {
-                                    setState(() {
-                                      _isPush = value;
-                                    });
-                                  }
-                              )
-                            ],
                           ),
                           SizedBox(
                             height: 10,

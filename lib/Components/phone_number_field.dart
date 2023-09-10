@@ -45,7 +45,7 @@ class _PhoneNumberTextFieldState extends State<PhoneNumberTextField> {
           hintText: 'Enter phone number',
           // Customize the appearance here
           border: InputBorder.none, // Remove the underline
-          contentPadding: EdgeInsets.symmetric(horizontal: 0, vertical: (widget.isPhoneNumberValid || widget.userPhoneNumber == '' || widget.userPhoneNumber == '+234') ? 12 : 0), // Add padding around the input
+          contentPadding: EdgeInsets.symmetric(horizontal: 0, vertical: (widget.isPhoneNumberValid || widget.userPhoneNumber == '' || widget.userPhoneNumber == '+234') ? 14 : 2), // Add padding around the input
         ),
       ),
     );

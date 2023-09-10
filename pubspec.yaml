@@ -56,6 +56,11 @@ dependencies:
   url_launcher: ^6.1.12
   timer_count_down: ^2.2.2
   sizer: ^2.0.15
+  timeago: ^3.5.0
+  pin_code_fields: ^8.0.1
+  flutter_termii: ^0.2.1
+  searchfield: ^0.8.4
+  geocoding: ^2.1.0
 flutter_icons:
   android: "launcher_icon"
   ios: true
@@ -93,6 +98,7 @@ flutter:
     - assets/login/
     - assets/icons/
     - assets/profiles/
+    - assets/
 
   # An image asset can refer to one or more resolution-specific "variants", see
   # https://flutter.dev/assets-and-images/#resolution-aware

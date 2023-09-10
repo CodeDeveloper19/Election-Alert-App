@@ -1,3 +1,4 @@
+import 'dart:convert';
 import 'dart:math';
 import 'package:awesome_snackbar_content/awesome_snackbar_content.dart';
 import 'package:cloud_firestore/cloud_firestore.dart';
@@ -91,17 +92,20 @@ class _HomepageState extends State<Homepage> {
   bool _buildings = false;
   MapType _mapType = MapType.normal;
 
+  int _id = 0;
+
   double _compassRotation = 0.0;
   late LatLng _currentLatLng;
 
   late bool? _isAlertSave;
-  late bool? _isTrendSave;
 
   bool _phoneNumberVerified = false;
   bool _emailAddressVerified = false;
 
   double _pollingAddressLatitude = 0.0;
   double _pollingAddressLongitude = 0.0;
+  double _alertLatitude = 0.0;
+  double _alertLongitude = 0.0;
 
   String _pollingAddress = '';
 
@@ -125,7 +129,7 @@ class _HomepageState extends State<Homepage> {
     mapController = controller;
   }
 
-  IO.Socket socket = IO.io('http://10.0.2.2:3000', IO.OptionBuilder().setTransports(['websocket']).build());
+  IO.Socket socket = IO.io('https://main-backend-for-election-alert-app.onrender.com/', IO.OptionBuilder().setTransports(['websocket']).build()); //http://10.0.2.2:3000 https://main-backend-for-election-alert-app.onrender.com/
 
   FlutterLocalNotificationsPlugin flutterLocalNotificationsPlugin =
   FlutterLocalNotificationsPlugin();
@@ -133,16 +137,11 @@ class _HomepageState extends State<Homepage> {
   Future init() async {
     await loadCustomMarkers();
     await getUserData(false);
+    await getMapSettings();
     await getPollingUnitData();
     await _addMarker(LatLng(_pollingAddressLatitude, _pollingAddressLongitude), 'Your Polling Unit', '', []);
     await _determinePosition();
     await socketConnection();
-    requestNotificationPermission();
-  }
-
-  requestNotificationPermission () {
-    flutterLocalNotificationsPlugin.resolvePlatformSpecificImplementation<
-        AndroidFlutterLocalNotificationsPlugin>()!.requestPermission();
   }
 
   socketConnection () {
@@ -152,26 +151,25 @@ class _HomepageState extends State<Homepage> {
     socket.onDisconnect((_) => print('disconnect'));
     socket.onConnectError((_) => print('Connect Error: $_'));
     socket.on('received_alert', (data) {
-      print(data);
+      receiveAlertFromServer(data);
     });
   }
 
   Future<void> getMapSettings () async {
     preferences = await SharedPreferences.getInstance();
-    preferences = await SharedPreferences.getInstance();
 
     _isAlertSave = preferences.getBool('alert_notifications');
-    _isTrendSave = preferences.getBool('trend_notifications');
 
-    if (_isTrendSave == null && _isAlertSave == null){
+    if (_isAlertSave == null){
       setState(() {
         _isAlertSave = false;
-        _isTrendSave = false;
       });
     }
   }
 
   Future getUserData (bool result) async {
+    preferences = await SharedPreferences.getInstance();
+
     imageCache.clear();
     if (result == false){
       updateProgress();
@@ -186,6 +184,7 @@ class _HomepageState extends State<Homepage> {
         double pollingAddressLatitude = userData['pollingAddressLatitude'];
         double pollingAddressLongitude = userData['pollingAddressLongitude'];
         String pollingAddress = userData['pollingAddress'];
+        bool alertSave = userData['alertSave'];
         setState(() {
           _profileImageURL = link;
           _phoneNumberVerified = phoneNumberVerified;
@@ -194,6 +193,7 @@ class _HomepageState extends State<Homepage> {
           _pollingAddressLongitude = pollingAddressLongitude;
           _pollingAddress = pollingAddress;
         });
+        await preferences.setBool('alert_notifications', alertSave);
       } else {
         print('Document does not exist');
       }
@@ -209,7 +209,6 @@ class _HomepageState extends State<Homepage> {
       documents = documentSnapshot.docs;
       for (DocumentSnapshot document in documents) {
         Map<String, dynamic> data = document.data() as Map<String, dynamic>;
-        print(data);
         String distressLevel = data['distressLevel'];
         double pollingAddressLatitude = data['latitude'];
         double pollingAddressLongitude = data['longitude'];
@@ -249,12 +248,7 @@ class _HomepageState extends State<Homepage> {
     try {
       _locationData = await location.getLocation();
       if (_locationData != null) {
-        await mapController.animateCamera(
-          CameraUpdate.newLatLngZoom(
-            LatLng(_locationData!.latitude!, _locationData!.longitude!),
-            17.0, // You can adjust the zoom level as needed.
-          ),
-        );
+        animateCameraToLocation(_locationData!.latitude!, _locationData!.longitude!);
       }
     } catch (e) {
       print("Error getting location: $e");
@@ -264,6 +258,15 @@ class _HomepageState extends State<Homepage> {
     if (_progressVisible){
       updateProgress();
     }
+  }
+
+  Future<void> animateCameraToLocation(double latitude, double longitude) async {
+    await mapController.animateCamera(
+      CameraUpdate.newLatLngZoom(
+        LatLng(latitude, longitude),
+        17.0, // You can adjust the zoom level as needed.
+      ),
+    );
   }
 
   void _rotateMap() {
@@ -349,7 +352,12 @@ class _HomepageState extends State<Homepage> {
       // Create the SelectionScreen in the next step.
       MaterialPageRoute(builder: (context) => const ProfileSettings()),
     );
-    getUserData(result);
+    if (result != null) {
+      getUserData(result);
+    } else {
+      getUserData(true);
+
+    }
   }
 
   void _showSnackbar(message, contentType, title) {
@@ -374,6 +382,62 @@ class _HomepageState extends State<Homepage> {
         ),
       ),
     );
+  }
+
+  Future <void> sendAlertToServer() async {
+    Map<String, dynamic> messageData = {
+      'pollingAddress': _pollingAddress,
+      // 'latitude': 6.8541,
+      // 'longitude':  7.4077,
+      'latitude': _pollingAddressLatitude,
+      'longitude': _pollingAddressLongitude,
+      'distressLevel': selectedOption,
+      'violenceTypes': chosenTypeofViolence,
+      // 'distressLevel': 'Low',
+      // 'violenceTypes': ['Bribery'],
+      'imageLink': _profileImageURL
+    };
+    socket.emit('alert_sent', messageData);
+    await sendAlertAsActivity('You reported a case of Electoral Violence at $_pollingAddress', _profileImageURL, '');
+  }
+
+  Future <void> sendAlertAsActivity(String a, String b, String c) async {
+    String now = DateTime.now().toString();
+    Map<String, dynamic> storedData;
+    String? jsonData = preferences.getString('activity');
+    if (jsonData != null) {
+      storedData = jsonDecode(jsonData);
+    } else {
+      storedData = {};
+    }
+    storedData[now] = [a, b, c];
+
+// Convert the map to a JSON string
+    String activityJson = json.encode(storedData);
+
+    preferences.setString('activity', activityJson);
+  }
+
+
+  Future<void> receiveAlertFromServer(data) async {
+    String pollingAddress = data['pollingAddress'];
+    LatLng position = LatLng(data['latitude'], data['longitude']);
+    String distressLevel = data['distressLevel'];
+    List violenceTypes = data['violenceTypes'];
+    String imageLink = data['imageLink'];
+    setState(() {
+      _alertLatitude = data['latitude'];
+      _alertLongitude = data['longitude'];
+    });
+    await _addMarker(position, pollingAddress, distressLevel, violenceTypes);
+    setState(() {
+      _id++;
+    });
+    if (_isAlertSave == true) {
+      localNotification(notificationTitle: 'Violence Reported', notificationBody: 'Violence was noticed at $pollingAddress polling unit', id: _id,
+          mapController: mapController, alertLongitude: _alertLongitude, alertLatitude: _alertLatitude).showNotification();
+      await sendAlertAsActivity('Someone reported violence at $pollingAddress polling unit', imageLink, '');
+    }
   }
 
   @override
@@ -580,7 +644,6 @@ class _HomepageState extends State<Homepage> {
 
     return Scaffold(
       extendBody: true,
-      // backgroundColor: Colors.blue,
       body: PageView(
         controller: _controller,
         physics: NeverScrollableScrollPhysics(),
@@ -616,24 +679,22 @@ class _HomepageState extends State<Homepage> {
                   onTap: () {},
                   child: ElevatedButton(
                     onPressed: () async {
-                      // socket.emit('alert_sent', _pollingAddress);
-                      localNotification(notificationTitle: 'Violence Reported', notificationBody: 'Violence was noticed at',).showNotification();
-                      // updateProgress();
-                      // if (_emailAddressVerified || _phoneNumberVerified){
-                      //   final double distance = await calculateDistance(userLocation: _currentLatLng, pollingUnitLocation: LatLng(_pollingAddressLatitude, _pollingAddressLongitude),).calculateLocationDistance();
-                      //   if (distance <= 0.2){
-                      //     updateProgress();
-                      //     setState(() {
-                      //       _reportProblem = !_reportProblem;
-                      //     });
-                      //   } else {
-                      //     updateProgress();
-                      //     _showSnackbar('You are not within 200 metres of your polling unit.', ContentType.failure, "Can't send alert!");
-                      //   }
-                      // } else {
-                      //   updateProgress();
-                      //   _showSnackbar('Please verify your phone number or email to use this feature.', ContentType.warning, 'Action Denied!');
-                      // }
+                      updateProgress();
+                      if (_emailAddressVerified || _phoneNumberVerified){
+                        final double distance = await calculateDistance(userLocation: _currentLatLng, pollingUnitLocation: LatLng(_pollingAddressLatitude, _pollingAddressLongitude),).calculateLocationDistance();
+                        if (distance <= 0.2){
+                          updateProgress();
+                          setState(() {
+                            _reportProblem = !_reportProblem;
+                          });
+                        } else {
+                          updateProgress();
+                          _showSnackbar('You are not within 200 metres of your polling unit.', ContentType.failure, "Can't send alert!");
+                        }
+                      } else {
+                        updateProgress();
+                        _showSnackbar('Please verify your phone number or email to use this feature.', ContentType.warning, 'Action Denied!');
+                      }
                     },
                     child: (_emailAddressVerified || _phoneNumberVerified) ? Image.asset('assets/icons/alarm.png', width: 50, height: 50) :  ColorFiltered(
                       colorFilter: ColorFilter.mode(
@@ -818,6 +879,7 @@ class _HomepageState extends State<Homepage> {
                                       latitude: _pollingAddressLatitude, longitude: _pollingAddressLongitude, pollingAddress: _pollingAddress,).uploadViolenceReport();
                                     updateProgress();
                                     if (reportResponse == 'Success!'){
+                                      await sendAlertToServer();
                                       _showSnackbar('Report has been submitted successfully', ContentType.success, reportResponse);
                                     } else {
                                       _showSnackbar('There was an error submitting your response', ContentType.failure, reportResponse);
@@ -856,7 +918,6 @@ class _HomepageState extends State<Homepage> {
                         InkWell(
                           onTap: () {
                             navigateToProfile(context);
-                            // final result = context.go('/auth/homepage/profile');
                           },
                           child: Builder(
                               builder: (BuildContext context){
@@ -871,7 +932,7 @@ class _HomepageState extends State<Homepage> {
                         ElevatedButton(
                           onPressed: () async {
                             await getMapSettings();
-                            if (_isAlertSave! || _isTrendSave!) {
+                            if (_isAlertSave!) {
                               context.push('/auth/homepage/notifications_onboarding/settings');
                             } else {
                               context.push('/auth/homepage/notifications_onboarding');
@@ -941,7 +1002,6 @@ class _HomepageState extends State<Homepage> {
                   child: Transform.rotate(
                       angle: _compassRotation,
                       child: Image.asset('assets/icons/compass.png', color: Colors.green[600], width: 30, height: 30,)
-                    // Icon(Icons.arrow_upward, color: Colors.white, size: 18,),
                   ),
                 ),
               ),
@@ -1012,7 +1072,7 @@ class _HomepageState extends State<Homepage> {
         ],
       ),
       bottomNavigationBar: Container(
-        margin: EdgeInsets.all(20),
+        margin: EdgeInsets.symmetric(horizontal: 60, vertical: 20),  //EdgeInsets.all(20)
         decoration: BoxDecoration(
           color: Colors.white,
           borderRadius: BorderRadius.all(Radius.circular(20))
@@ -1022,7 +1082,7 @@ class _HomepageState extends State<Homepage> {
           color: Colors.green[600],
           activeColor: Colors.green[600],
           tabBackgroundColor: (_selectedIndex == 0 && _phoneNumberVerified == false) ? Colors.transparent : Colors.black.withOpacity(0.1),
-          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10),
+          padding: EdgeInsets.symmetric(horizontal: 20, vertical: 10), //horizontal: 20
           tabMargin: EdgeInsets.all(10),
           iconSize: 24,
           style: GnavStyle.google,
@@ -1044,10 +1104,6 @@ class _HomepageState extends State<Homepage> {
                 _determinePosition();
               },
             ),
-            GButton(
-              icon: Icons.trending_up_sharp,
-              text: 'Trends',
-            )
           ],
           selectedIndex: _selectedIndex,
           onTabChange: (index) {

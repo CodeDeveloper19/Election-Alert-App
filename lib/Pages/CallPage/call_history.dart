@@ -83,9 +83,7 @@ class _CallHistoryState extends State<CallHistory> {
   Widget build(BuildContext context) {
     List<Widget> callLogWidgets = callLogs.map((entry) {
       return Container(
-        // padding: EdgeInsets.symmetric(vertical: 10),
         child: Row(
-          // crossAxisAlignment: CrossAxisAlignment.,
           mainAxisAlignment: MainAxisAlignment.spaceBetween,
           children: [
             CircleAvatar(
@@ -99,14 +97,12 @@ class _CallHistoryState extends State<CallHistory> {
             Expanded(
               child: Column(
                 crossAxisAlignment: CrossAxisAlignment.start,
-                // mainAxisAlignment: MainAxisAlignment.center,
                 children: <Widget>[
                   Text('${entry.number}'),
                   SizedBox(
                     height: 5,
                   ),
                   Row(
-                    // mainAxisAlignment: MainAxisAlignment.center,
                     children: [
                       Icon(Icons.access_time_outlined, size: 15,),
                       SizedBox(width: 5,),

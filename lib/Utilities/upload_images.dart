@@ -12,15 +12,23 @@ class uploadImages extends StatefulWidget {
   final firestore = FirebaseFirestore.instance;
 
   Future<bool> selectGalleryImage() async {
-    Uint8List img = await pickImage(ImageSource.gallery);
-    await uploadImageToStorage('profileImage', img);
-    return false;
+    dynamic img = await pickImage(ImageSource.gallery);
+    if (img == null) {
+      return false;
+    } else {
+      await uploadImageToStorage('profileImage', img);
+      return true;
+    }
   }
 
   Future<bool> selectCameraImage() async {
-    Uint8List img = await pickImage(ImageSource.camera);
-    await uploadImageToStorage('profileImage', img);
-    return false;
+    dynamic img = await pickImage(ImageSource.camera);
+    if (img == null) {
+      return false;
+    } else {
+      await uploadImageToStorage('profileImage', img);
+      return true;
+    }
   }
 
   Future uploadImageToStorage(String childName, Uint8List file) async {
@@ -46,7 +54,7 @@ class uploadImages extends StatefulWidget {
       return await _file.readAsBytes();
     } else {
       print('No Image is selected');
-      return false;
+      // return false;
     }
   }
 
