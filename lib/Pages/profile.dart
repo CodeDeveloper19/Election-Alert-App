@@ -301,12 +301,12 @@ class _ProfileSettingsState extends State<ProfileSettings> {
     updateProgress();
     if(_emailAddressVerified == false) {
       await user?.sendEmailVerification();
-      _showSnackbar('A verification link has been sent to your email address. Please relogin to update your verififcation status.', ContentType.help, 'Please Check');
+      _showSnackbar('A verification link has been sent to your email address. Please relogin to update.', ContentType.help, 'Please Check!');
       updateProgress();
     } else {
       await updateVerificationStatus('emailAddressVerified');
       updateProgress();
-      _showSnackbar('Your email address is already verified.', ContentType.success, 'Success!');
+      _showSnackbar('Your email address is already verified.', ContentType.success, 'Please Note!');
     }
   }
 
@@ -358,7 +358,7 @@ class _ProfileSettingsState extends State<ProfileSettings> {
       });
       return true;
     } else {
-      _showSnackbar('The request returned a status code of $status and $smsStatus', ContentType.failure, 'Error');
+      _showSnackbar('The request returned a status code of $status and $smsStatus', ContentType.failure, 'Error!');
       return false;
     }
   }

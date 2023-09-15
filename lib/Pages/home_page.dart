@@ -49,16 +49,6 @@ class _HomepageState extends State<Homepage> {
     );
 
     return customMarker;
-    //   BuildContext context, String assetPath) async {
-    // final ByteData data = await rootBundle.load(assetPath);
-    // final List<int> bytes = data.buffer.asUint8List();
-    // final img.Image image = img.decodeImage(Uint8List.fromList(bytes))!;
-    //
-    // final BitmapDescriptor customMarker = BitmapDescriptor.fromBytes(
-    //   Uint8List.fromList(img.encodePng(image)),
-    // );
-    //
-    // return customMarker;
   }
 
   Future<void> loadCustomMarkers() async {
@@ -121,7 +111,7 @@ class _HomepageState extends State<Homepage> {
   bool _reportProblem = false;
   bool _traffic = false;
   bool _buildings = false;
-  MapType _mapType = MapType.normal;
+  MapType _mapType = MapType.hybrid;
 
   int _id = 0;
 
@@ -259,21 +249,16 @@ class _HomepageState extends State<Homepage> {
     }
     _serviceEnabled = await location.serviceEnabled();
     if (!_serviceEnabled) {
-      print('service not enabled');
       _serviceEnabled = await location.requestService();
-      if (!_serviceEnabled) {
-        return;
-      }
+      return;
     }
 
     _permissionGranted = await location.hasPermission();
     if (_permissionGranted == PermissionStatus.denied) {
-      print('permission denied');
       _permissionGranted = await location.requestPermission();
-      if (_permissionGranted != PermissionStatus.granted) {
-        print('permission granted');
-        return;
-      }
+      updateProgress();
+      _showSnackbar('Your location needs to be enabled to use the app fully.', ContentType.failure, 'Location Failed');
+      return;
     }
 
     try {
@@ -370,7 +355,7 @@ class _HomepageState extends State<Homepage> {
       return InfoWindow(title: markerName);
     } else {
       return InfoWindow(title: markerName, snippet: "Distress Level: $distressLevel, Violence Detected: $violenceTypeText", onTap: () {
-        _showSnackbar("Violence Detected: $violenceTypeText at $markerName", ContentType.warning, 'Violence Report');
+        _showSnackbar("Violence Detected: $violenceTypeText", ContentType.warning, 'Violence Report');
       });
     }
   }
@@ -501,7 +486,7 @@ class _HomepageState extends State<Homepage> {
                 ),
               ),
             ),
-            Text('Default', style: TextStyle(color: _mapType == MapType.normal ? Colors.green : Colors.grey[600], fontFamily: 'OpenSans', fontSize: 10),),
+            Text('Normal', style: TextStyle(color: _mapType == MapType.normal ? Colors.green : Colors.grey[600], fontFamily: 'OpenSans', fontSize: 10),),
           ],
         ),
       ),
@@ -708,7 +693,13 @@ class _HomepageState extends State<Homepage> {
                   child: ElevatedButton(
                     onPressed: () async {
                       updateProgress();
-                      if (_emailAddressVerified || _phoneNumberVerified){
+                      bool isPermissionGranted = false;
+                      if (_permissionGranted == PermissionStatus.granted || _permissionGranted == PermissionStatus.grantedLimited){
+                        setState(() {
+                          isPermissionGranted = true;
+                        });
+                      }
+                      if ((_emailAddressVerified || _phoneNumberVerified) && isPermissionGranted){
                         final double distance = await calculateDistance(userLocation: _currentLatLng, pollingUnitLocation: LatLng(_pollingAddressLatitude, _pollingAddressLongitude),).calculateLocationDistance();
                         if (distance <= 0.2){
                           updateProgress();
@@ -721,7 +712,11 @@ class _HomepageState extends State<Homepage> {
                         }
                       } else {
                         updateProgress();
-                        _showSnackbar('Please verify your phone number or email to use this feature.', ContentType.warning, 'Action Denied!');
+                        if (!_emailAddressVerified || !_phoneNumberVerified) {
+                          _showSnackbar('Please verify your phone number or email to use this feature.', ContentType.warning, 'Action Denied!');
+                        } else {
+                          _showSnackbar('Please enable your location to use this feature.', ContentType.warning, 'Action Denied!');
+                        }
                       }
                     },
                     child: (_emailAddressVerified || _phoneNumberVerified) ? Image.asset('assets/icons/alarm.png', width: 50, height: 50) :  ColorFiltered(
