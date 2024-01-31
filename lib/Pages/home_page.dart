@@ -247,18 +247,19 @@ class _HomepageState extends State<Homepage> {
     if (!_progressVisible){
       updateProgress();
     }
-    _serviceEnabled = await location.serviceEnabled();
-    if (!_serviceEnabled) {
-      _serviceEnabled = await location.requestService();
-      return;
-    }
-
     _permissionGranted = await location.hasPermission();
-    if (_permissionGranted == PermissionStatus.denied) {
-      _permissionGranted = await location.requestPermission();
+    _serviceEnabled = await location.requestService();
+    if (_permissionGranted == PermissionStatus.denied || _permissionGranted == PermissionStatus.deniedForever) {
+     _permissionGranted = await location.requestPermission();
+      if (_permissionGranted == PermissionStatus.denied || _permissionGranted == PermissionStatus.deniedForever){
+        _showSnackbar('Your location needs to be enabled to use the app fully.', ContentType.failure, 'Location Failed');
+        updateProgress();
+        return;
+      } else {
+        updateProgress();
+      }
+    } else {
       updateProgress();
-      _showSnackbar('Your location needs to be enabled to use the app fully.', ContentType.failure, 'Location Failed');
-      return;
     }
 
     try {
